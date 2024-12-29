@@ -1,11 +1,17 @@
 import json
 
-home_player_ids = {2547,2548,2405,201609,204020,2736,2365,101123,2757,1626159,202355,2617}
-visitor_player_ids = {101109,101111,200826,203939,101114,201580,203098,202379,202083,202718,2585,2734,1717}
+home_player_ids = {2547, 2548, 2405, 201609, 204020, 2736, 2365, 101123, 2757, 1626159, 202355, 2617}
+visitor_player_ids = {101109, 101111, 200826, 203939, 101114, 201580, 203098, 202379, 202083, 202718, 2585, 2734, 1717}
+
 def load_match_data(file_path):
     """Load match data from a JSON file."""
     with open(file_path, 'r') as file:
         return json.load(file)
+
+def save_match_data(file_path, data):
+    """Save match data to a JSON file."""
+    with open(file_path, 'w') as file:
+        json.dump(data, file)
 
 def parse_state(state):
     """Parse state into meaningful components."""
@@ -23,55 +29,51 @@ def detect_action(state1, state2):
     home_basket_coords = (88.8, 24.7)  # Ev sahibi takım sepet koordinatları (örnek)
     visitor_basket_coords = (5.37, 24.7)  # Rakip takım sepet koordinatları (örnek)
 
-    actions = []   #actions = ["pass", "shoot", "dribble", "defend", "idle"]
+    actions = []  # actions = ["pass", "shoot", "dribble", "defend", "idle"]
     rewards = []
 
-
-
     if ball_owner1 in visitor_player_ids:  # Top rakipte
-            #print("defend")
-            actions.append("defend")
-            if ball_owner2 in visitor_player_ids:
-                #print("defend_fail")
-                rewards.append("defend_fail")
-            elif ball_owner2 in home_player_ids:
-                rewards.append("steal")
+        actions.append("defend")
+        if ball_owner2 in visitor_player_ids:
+            rewards.append("defend_fail")
+        elif ball_owner2 in home_player_ids:
+            rewards.append("steal")
     elif ball_owner1 in home_player_ids:  # Top ev sahibinde
-        # pass, shot, dribble
-        if ball_owner1 == ball_owner2: # dribble
+        if ball_owner1 == ball_owner2:  # Dribble
             actions.append("dribble")
-        else:  # pass or shot    11 feet i geçsin
-            # Topun hareket yönü vektörü
+        else:  # Pass or shot
             motion_vector = (ball_position2[0] - ball_position1[0], ball_position2[1] - ball_position1[1])
-
-            # Pota ile olan doğrultuyu hesapla
             basket_vector = (home_basket_coords[0] - ball_position2[0], home_basket_coords[1] - ball_position2[1])
-
-            # Vektörlerin noktasal çarpımını kullanarak hareketin potaya doğru olup olmadığını kontrol et
             dot_product = motion_vector[0] * basket_vector[0] + motion_vector[1] * basket_vector[1]
 
-            # Eğer noktasal çarpım pozitifse, hareket potaya doğru yöneliyor demektir
-            if dot_product > 0 and ball_position2[2] > 6.5:  # Top havada ve potaya doğru yöneliyorsa
+            if dot_product > 0 and ball_position2[2] > 6.5:  # Shoot
                 actions.append("shoot")
-            else:
+            else:  # Pass
                 actions.append("pass")
-
-        
-    else: # Sahipsiz top
+    else:  # Sahipsiz top
         actions.append("idle")
-
 
     return actions
 
-def main():
-    # Load match data
-    match_data = load_match_data('match_data.json')
+def update_json_with_actions(file_path):
+    """Update the JSON file with actions and print them to console."""
+    match_data = load_match_data(file_path)
 
     for i in range(len(match_data) - 1):
         state1 = match_data[i][0]
         state2 = match_data[i + 1][0]
         actions = detect_action(state1, state2)
+        
+        # Print actions to console
         print(f"Actions between state {i} and state {i+1}: {actions}")
+        
+        # Add actions to the JSON data
+        match_data[i][1] = actions
+
+    # Save updated match data to the file
+    save_match_data(file_path, match_data)
+    print(f"Updated JSON file: {file_path}")
 
 if __name__ == "__main__":
-    main()
+    file_path = 'match_data.json'  # Replace with your actual JSON file path
+    update_json_with_actions(file_path)
