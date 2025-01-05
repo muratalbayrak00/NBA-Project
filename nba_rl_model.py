@@ -94,7 +94,17 @@ class BasketballEnvironment:
             # Eğer state beklenen boyutta değilse hata ver
             if len(state) != 25:
                 logging.error(f"Unexpected state size in Event {self.event_idx}, Moment {self.moment_idx}: {len(state)}")
-                return None, True
+                print("burası patlıyor.")
+                self.moment_idx += 1
+                if self.moment_idx >= len(moments):
+                    self.event_idx += 1
+                    self.moment_idx = 1
+                    self.process_moment()
+                    if self.event_idx >= len(self.events):
+                        print("----------------------------------------------------------------------")
+                        print(self.event_idx)
+                        print(self.events)
+                        return None, True  # Tüm eventler bitti
 
             # Bir sonraki momenti işlemek için ilerle
             self.moment_idx += 1
@@ -102,6 +112,9 @@ class BasketballEnvironment:
                 self.event_idx += 1
                 self.moment_idx = 1
                 if self.event_idx >= len(self.events):
+                    print("----------------------------------------------------------------------")
+                    print(self.event_idx)
+                    print(self.events)
                     return None, True  # Tüm eventler bitti
 
             return state, False
@@ -180,10 +193,10 @@ class BasketballEnvironment:
 
             # State güncelle
             self.state, self.done = self.process_moment()
-            print(f"State: {state}")
+            #print(f"State: {state}")
         except Exception as e:
             logging.error(f"Error in step function: {e}")
-            self.done = True
+            #self.done = True
 
         return self.state, reward, self.done#, result
 
@@ -256,11 +269,12 @@ def train_dqn(batch_size=32):
 # Eğitim Başlangıcı
 env = BasketballEnvironment("fdni0021500491.json", [5.37, 24.7], [88, 24.7])
 
-for episode in range(200):
+for episode in range(1):
     state = env.reset()
     total_reward = 0
 
     while True:
+        #print("while")
         if random.random() < epsilon:
             action_idx = random.randint(0, action_dim - 1)
         else:
@@ -284,6 +298,7 @@ for episode in range(200):
         state = next_state if next_state is not None else state
         total_reward += reward
         if done:
+            print("break")
             break
 
     epsilon = max(epsilon * epsilon_decay, epsilon_min)
@@ -291,16 +306,16 @@ for episode in range(200):
 
 # Modeli kaydetme (eğitim tamamlandıktan sonra)
 torch.save(model.state_dict(), "dqn_model.pth")
-print("Model kaydedildi.")
+#print("Model kaydedildi.")
 # Modeli yükleme
 model.load_state_dict(torch.load("dqn_model.pth", weights_only=True))
 model.eval()  # Modeli değerlendirme moduna alır
-print("Model yüklendi ve değerlendiriliyor.")
+#print("Model yüklendi ve değerlendiriliyor.")
 # Modelin bir state üzerinde aksiyon tahmin etmesi
 state = env.reset()  # Örnek bir başlangıç durumu
 with torch.no_grad():
     q_values = model(torch.tensor(state, dtype=torch.float32))
     action_idx = torch.argmax(q_values).item()
 
-print(f"Modelin verdiği aksiyon: {action_idx}")
+#print(f"Modelin verdiği aksiyon: {action_idx}")
 

@@ -1,0 +1,3 @@
+2025-01-03 01:59:37,027 - ERROR - Error in update_next_state function: list indices must be integers or slices, not float
+2025-01-03 01:59:37,028 - ERROR - Error in update_next_state function: list indices must be integers or slices, not float
+2025-01-03 01:59:37,028 - ERROR - Error in update_next_state function: list indices must be integers or slices, not float
