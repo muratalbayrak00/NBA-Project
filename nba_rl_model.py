@@ -49,7 +49,7 @@ class BasketballEnvironment:
         min_id = 0
         for pos in player:
             player_position = pos[1:]
-            distance = np.linalg.norm(player_position - ball_position)
+            distance = np.linalg.norm(player_position - ball_position) # euclidian 
             #print(distance)
             if (distance < min_distance):
                 min_distance = distance
@@ -87,7 +87,7 @@ class BasketballEnvironment:
             ball_holder = self.identify_ball_holder(current_moment)
             #print(f"Ball holder: {ball_holder}")
             # State'i oluştur
-            state = np.concatenate((player_positions.flatten(), ball_position, [time_remaining, ball_holder]))
+            state = np.concatenate((player_positions.flatten(), ball_position, [time_remaining, ball_holder])) # TODO: state'lerimize skor eklenmeli 
             np.set_printoptions(suppress=True)
             #print(f"State: {state}")
 
@@ -125,7 +125,7 @@ class BasketballEnvironment:
     
     def step(self, action):
         """
-        Bir aksiyonu uygular ve yeni state, ödül ve oyunun bitip bitmediğini döndürür.
+        Bir aksiyonu uygular ve yeni state, ödül ve oyunun bitip bitmediğini döndürür
         """
         reward = 0
         result = None
@@ -134,7 +134,7 @@ class BasketballEnvironment:
             # Aksiyon türüne göre işlemler
             if action == "shoot":
                 # Şutun başarı oranı, saha pozisyonuna bağlı olabilir
-                ball_position = self.state[-4:-2]  # Topun mevcut pozisyonu
+                ball_position = self.state[-4:-2]  # TODO: burayi degistir topun x y z olarak almali burada 2 tane aliyor [-5,-3] olmali????
                 distance_to_basket = np.linalg.norm(ball_position - np.array(self.home_basket_coords))
                 success_rate = max(0.1, 0.9 - 0.02 * distance_to_basket)  # Daha uzak mesafede daha düşük başarı
                 if random.random() < success_rate:
@@ -149,7 +149,7 @@ class BasketballEnvironment:
             elif action == "pass":
                 # Pasın başarı oranı, top tutan oyuncu ve yakınındaki oyuncuların pozisyonlarına bağlı olabilir
                 ball_holder = int(self.state[-1])  # Topu tutan oyuncu
-                if ball_holder != 0:  # Eğer top bir oyuncuda ise
+                if ball_holder != 0:  # TODO: passi kime atiyor rakip oyuncu mu takim arkadasi mi 
                     success_rate = 0.9  # Sabit başarı oranı, daha detaylı pozisyon analiziyle geliştirilebilir
                     if random.random() < success_rate:
                         reward = 3  # Başarılı pas
@@ -193,7 +193,7 @@ class BasketballEnvironment:
 
             # State güncelle
             self.state, self.done = self.process_moment()
-            #print(f"State: {state}")
+            print(f"State: {state}")
         except Exception as e:
             logging.error(f"Error in step function: {e}")
             #self.done = True
@@ -234,11 +234,11 @@ target_model.eval()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 loss_fn = nn.MSELoss()
 
-epsilon = 1.0
-epsilon_decay = 0.995
-epsilon_min = 0.01
-gamma = 0.99
-replay_buffer = []
+epsilon = 1.0 # rastgelelilik 
+epsilon_decay = 0.995 # epsilon azalma orani 
+epsilon_min = 0.01 #  min epsilon
+gamma = 0.99 # gelecekteki odullere buyuk agirlik vermesi
+replay_buffer = [] 
 
 # ------------------
 # Eğitim Döngüsü
@@ -269,7 +269,7 @@ def train_dqn(batch_size=32):
 # Eğitim Başlangıcı
 env = BasketballEnvironment("fdni0021500491.json", [5.37, 24.7], [88, 24.7])
 
-for episode in range(1):
+for episode in range(200):
     state = env.reset()
     total_reward = 0
 

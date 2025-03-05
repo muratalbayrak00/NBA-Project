@@ -82,6 +82,7 @@ class BasketballEnvironment:
                     # State'i oluştur
                     state = np.concatenate((player_positions.flatten(), ball_position, [time_remaining, ball_holder]))
                     np.set_printoptions(suppress=True)
+                    #print(state)
 
                     # Eğer state beklenen boyutta değilse hata ver
                     # State'in boyutunu kontrol et
