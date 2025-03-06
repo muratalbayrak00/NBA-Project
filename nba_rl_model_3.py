@@ -155,7 +155,7 @@ if __name__ == "__main__":
     gamma = 0.99
 
     # Eğitim döngüsü
-    num_episodes = 10  # Eğitim episode sayısı
+    num_episodes = 100  # Eğitim episode sayısı
     for episode in range(num_episodes):
         for i in range(len(replay_buffer)):
             train_dqn(model, target_model, optimizer, loss_fn, replay_buffer, gamma=gamma)

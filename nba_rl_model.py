@@ -267,7 +267,7 @@ def train_dqn(batch_size=32):
     optimizer.step()
 
 # Eğitim Başlangıcı
-env = BasketballEnvironment("fdni0021500491.json", [5.37, 24.7], [88, 24.7])
+env = BasketballEnvironment("filtered_data/fdni0021500491.json", [5.37, 24.7], [88, 24.7])
 
 for episode in range(200):
     state = env.reset()
