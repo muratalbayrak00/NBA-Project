@@ -18,7 +18,21 @@ Rebase: Eğer develop dalındaki değişiklikleri main dalının üzerine taşı
  =>
 
 
----------- YAPILACAKLAR -----------
+------------------ YAPILACAKLAR ----------------
 [ ] State lere match score eklenmeli. 
 
+[ ] rakip basket attigin ceza yemeliyiz.
+
+[ ] period bilgisi state e eklenmeli basket atan takimi ayirt etmek icin
+
+[ ] oyuncu id lerinde sikinti olabilir bunlari incele
+
 [ ]
+
+defend fail 
+defend succesfull
+dribble 
+succesfull shot 
+missed shot 
+succesfull shot
+missed shot 
