@@ -77,10 +77,9 @@ def create_replay_buffer(states, actions_idx, rewards):
 
     return replay_buffer
 
-# DQN Eğitimi
 def train_dqn(model, target_model, optimizer, loss_fn, replay_buffer, batch_size=32, gamma=0.99):
     if len(replay_buffer) < batch_size:
-        return
+        return 0  # Eğer yeterli veri yoksa kaybı 0 olarak döndür
 
     batch = random.sample(replay_buffer, batch_size)
     states, actions_idx, rewards, next_states, dones = zip(*batch)
@@ -99,6 +98,8 @@ def train_dqn(model, target_model, optimizer, loss_fn, replay_buffer, batch_size
     optimizer.zero_grad()
     loss.backward()
     optimizer.step()
+
+    #return loss.item()  # Kaybı döndür
 
 # Modeli test verisi üzerinde değerlendirme
 def evaluate_model(model, test_states, test_actions_idx):
@@ -122,6 +123,27 @@ def evaluate_model(model, test_states, test_actions_idx):
     # Doğruluk hesapla
     accuracy = correct_predictions / total_predictions
     return accuracy
+
+# Test verisi üzerinde toplam ödül hesaplama
+def calculate_test_total_reward(model, test_states, test_actions_idx, test_rewards):
+    total_reward = 0
+
+    for i in range(len(test_states)):
+        state = test_states[i]
+        true_action_idx = test_actions_idx[i]
+        reward = test_rewards[i]
+
+        # Modelin tahminini al
+        with torch.no_grad():
+            state_tensor = torch.tensor(state, dtype=torch.float32)
+            q_values = model(state_tensor)
+            predicted_action_idx = torch.argmax(q_values).item()
+
+        # Tahmin edilen eylemin ödülünü topla
+        if predicted_action_idx == true_action_idx:
+            total_reward += reward
+
+    return total_reward
 
 # Ana program
 if __name__ == "__main__":
@@ -159,12 +181,22 @@ if __name__ == "__main__":
     gamma = 0.99
 
     # Eğitim döngüsü
-    num_episodes = 10  # Eğitim episode sayısı
+    num_episodes = 5
     for episode in range(num_episodes):
-        for i in range(len(replay_buffer)):
-            train_dqn(model, target_model, optimizer, loss_fn, replay_buffer, gamma=gamma)
+        total_loss = 0
+        total_reward = 0
 
-        print(f"Episode {episode + 1} completed.")
+        for i in range(len(replay_buffer)):
+
+            state, action_idx, reward, next_state, done = replay_buffer[i]
+            total_reward += reward
+
+        print(f"Episode {episode + 1} completed. Total Reward: {total_reward:.2f}")
+
+
+    # Test verisi üzerinde toplam ödülü hesapla
+    #test_total_reward = calculate_test_total_reward(model, test_states, test_actions_idx, test_rewards)
+    #print(f"Test Verisi Üzerinde Toplam Ödül: {test_total_reward:.2f}")
 
     # Modeli test verisi üzerinde değerlendir
     accuracy = evaluate_model(model, test_states, test_actions_idx)
