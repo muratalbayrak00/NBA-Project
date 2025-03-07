@@ -4,6 +4,10 @@ import torch.optim as optim
 import numpy as np
 from torch.distributions import Categorical
 import json
+import matplotlib.pyplot as plt
+
+# Eğitim döngüsü
+losses = []
 
 with open("/find_action/match_data.json", "r") as f:
     data = json.load(f)
@@ -149,3 +153,16 @@ torch.save(ppo_agent.policy.state_dict(), "ppo_model.pth")
 # Aksiyon seçme fonksiyonu (select_action) tanımlanır:
 # Ajanın güncellenmesi için update fonksiyonu tanımlanır:
 # Eğitim döngüsü başlatılır (1000 episode):
+
+
+
+# EKLENECEKLER 
+# dropout
+# Kritik ve aktör ağları için tamamen bağımsız katmanlar deneyebiliriz
+# Daha derin bir ağ kullanabilirsin
+# Learning rate’i dinamik hale getirebilirsin 
+# self.scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, step_size=100, gamma=0.9) her 100 iterasyonda learning ratei yuzde 10 düşürecektir
+# Minibatch kullan ( tum veriyle degil veriyi gruplar halinde egitmek oluyor bu)
+# Şu an yalnızca actor loss ve critic loss var. Exploration ve Exploitation Dengesini İyileştirme
+# Epsilon değerini adaptif hale getirebilirsin başlangıçta keşfi artır, ancak eğitim ilerledikçe modelin daha tutarlı seçimler yapmasını sagla
+# random seed arastir belki isimize yarayabilir. 
