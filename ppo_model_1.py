@@ -4,8 +4,6 @@ import torch.optim as optim
 import numpy as np
 from torch.distributions import Categorical
 import json
-import matplotlib.pyplot as plt
-
 with open("find_action/match_data.json", "r") as f:
     data = json.load(f)
 
