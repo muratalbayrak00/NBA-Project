@@ -50,33 +50,34 @@ class ActorCritic(nn.Module):
             nn.ReLU(),
             nn.Linear(64, 1)
         )
-
+    # burasi statei alır ortak katmanlardan geçirir, aktör ve kritik ağlarını kullanarak aksiyon olasılıklarını ve state değerini hesaplar
     def forward(self, state):
         shared = self.shared_layers(state)
-        action_logits = self.actor(shared)
-        action_logits = torch.clamp(action_logits, min=-50, max=50)
+        action_logits = self.actor(shared) # logits her bir değer, bir aksiyonun "ham skorunu" temsil eder.
+        action_logits = torch.clamp(action_logits, min=-50, max=50) # logits'i sınırla, olasilik hesaplamasinin kararli olmasi icin gerekli
         action_logits = (action_logits - action_logits.mean()) / (action_logits.std() + 1e-8)
-        action_probs = nn.Softmax(dim=-1)(action_logits)
+        action_probs = nn.Softmax(dim=-1)(action_logits) # olasiliga donusturur burada 
         value = self.critic(shared)
         return action_probs, value
 
-class PPO:
+class PPO: # lr = learning rate, gamma = discount factor, epsilon = güncelleme oranını çok büyük değişimlerden korumak için katsayi
     def __init__(self, state_dim, action_dim, lr=3e-4, gamma=0.99, clip_epsilon=0.2):
         self.gamma = gamma
         self.clip_epsilon = clip_epsilon
         self.policy = ActorCritic(state_dim, action_dim)
-        self.optimizer = optim.Adam(self.policy.parameters(), lr=lr)
-        self.MseLoss = nn.MSELoss()
+        self.optimizer = optim.Adam(self.policy.parameters(), lr=lr) # parametrelerin (ağırlıkların) güncellenmesi işlemini yapar
+        self.MseLoss = nn.MSELoss() # modelin tahminleri ile gerçek değerler arasındaki farkın karelerinin ortalamasını alır
 
     def select_action(self, state):
         state = torch.FloatTensor(state).unsqueeze(0)
         action_probs, _ = self.policy(state)
         dist = Categorical(action_probs)
         action = dist.sample()
-        log_prob = dist.log_prob(action)
+        log_prob = dist.log_prob(action) # secilen aksiyonun logritmik olasiligi alinir. 
         return action.item(), log_prob.item()
 
     def update(self, states, actions, log_probs_old, rewards, next_states, dones):
+        # odulleri gamma ile güncelle
         discounted_rewards = []
         total_reward = 0
 
@@ -89,18 +90,21 @@ class PPO:
         log_probs_old = torch.FloatTensor(np.array(log_probs_old))
         discounted_rewards = torch.FloatTensor(discounted_rewards)
 
+        # odul normalizasyon ( cok buyuk ve cok kucuk reward degerlerinin egitim dengesizligini korur
         std = discounted_rewards.std()
         if std == 0 or torch.isnan(std):
             discounted_rewards = discounted_rewards - discounted_rewards.mean()
         else:
             discounted_rewards = (discounted_rewards - discounted_rewards.mean()) / (std + 1e-7)
 
-        for _ in range(3):
+        for _ in range(3): # buradaki 3 u degistirebiliriz. cok olursa overfitting olur az olmasida yeterli degil. 
             action_probs, values = self.policy(states)
             dist = Categorical(action_probs)
             log_probs_new = dist.log_prob(actions)
 
             advantages = discounted_rewards - values.squeeze()
+            # Oran (ratio) ve kayıp fonksiyonu
+
             ratios = torch.exp(log_probs_new - log_probs_old)
             surr1 = ratios * advantages
             surr2 = torch.clamp(ratios, 1 - self.clip_epsilon, 1 + self.clip_epsilon) * advantages
