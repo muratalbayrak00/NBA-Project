@@ -33,13 +33,14 @@ def process_data(data):
     rewards = []
 
     # Eylemleri indekslere dönüştürmek için sözlük
-    actions = ["pass", "shoot", "dribble", "defend", "idle"]
+    actions = ["defend_fail", "succesfull_defend", "idle_defend", "dribble", "succesfull_shot","missed_shot","succesfull_pass","missed_pass","idle_pass","idle"]
     action_to_idx = {action: idx for idx, action in enumerate(actions)}
 
     for entry in data:
         state = entry[0]  # Durum vektörü
-        action = entry[1][0]  # Eylem (örneğin, "idle")
+        action = entry[1][0]
         reward = entry[2]  # Ödül
+        
 
         # Eylemi indekse dönüştür
         action_idx = action_to_idx.get(action, -1)  # Bilinmeyen eylemler için -1 döner
@@ -54,6 +55,9 @@ def process_data(data):
     # NumPy array'lerine dönüştürme
     states = np.array(states, dtype=np.float32)
     actions_idx = np.array(actions_idx, dtype=np.int64)
+    for i, reward in enumerate(rewards):
+        if isinstance(reward, (list, tuple)):
+            print(f"Index {i}: {reward} is a sequence!")
     rewards = np.array(rewards, dtype=np.float32)
 
     return states, actions_idx, rewards
@@ -140,7 +144,7 @@ if __name__ == "__main__":
 
     # Model ve optimizasyon parametreleri
     state_dim = len(train_states[0])  # Durum vektörünün boyutu
-    action_dim = 5  # Eylem sayısı (örneğin, 5 farklı eylem)
+    action_dim = 10  # Eylem sayısı (örneğin, 10 farklı eylem)
     model = DQN(state_dim, action_dim)
     target_model = DQN(state_dim, action_dim)
     target_model.load_state_dict(model.state_dict())
@@ -155,7 +159,7 @@ if __name__ == "__main__":
     gamma = 0.99
 
     # Eğitim döngüsü
-    num_episodes = 100  # Eğitim episode sayısı
+    num_episodes = 10  # Eğitim episode sayısı
     for episode in range(num_episodes):
         for i in range(len(replay_buffer)):
             train_dqn(model, target_model, optimizer, loss_fn, replay_buffer, gamma=gamma)

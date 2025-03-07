@@ -2,8 +2,8 @@ import json
 import numpy as np
 
 # JSON dosyasını yükle
-input_file = "../data/0021500493.json"  # Girdi JSON dosyasının adı
-output_file = "fdni0021500493.json"  # Çıktı JSON dosyasının adı
+input_file = "../data/0021500491.json"  # Girdi JSON dosyasının adı
+output_file = "fdni0021500491.json"  # Çıktı JSON dosyasının adı
 
 # JSON verilerini yükle
 with open(input_file, "r") as file:
@@ -58,9 +58,12 @@ for event in data["events"]:
         time_remaining = moment[3]  # Zaman bilgisi
         ball_holder = identify_ball_holder(moment)
         state = np.concatenate((player_positions.flatten(), ball_position, [time_remaining, ball_holder])) # TODO: state'lerimize skor eklenmeli 
-        action = ["idle"]  # Örnek action
-        reward = 0
-        match_data.append([state.tolist(), action, reward])
+        if len(state) == 25:
+            action = ["idle"]  # Örnek action
+            reward = 0
+            match_data.append([state.tolist(), action, reward])
+            
+
 
 
 with open(output_file, "w") as file:

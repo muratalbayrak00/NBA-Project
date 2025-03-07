@@ -5,7 +5,7 @@ import numpy as np
 from torch.distributions import Categorical
 import json
 
-with open("/find_action/match_data.json", "r") as f:
+with open("find_action/match_data.json", "r") as f:
     data = json.load(f)
 
 # Datayi ayristir.
