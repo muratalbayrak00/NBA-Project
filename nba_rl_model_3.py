@@ -77,9 +77,10 @@ def create_replay_buffer(states, actions_idx, rewards):
 
     return replay_buffer
 
+# DQN Eğitimi
 def train_dqn(model, target_model, optimizer, loss_fn, replay_buffer, batch_size=32, gamma=0.99):
     if len(replay_buffer) < batch_size:
-        return 0  # Eğer yeterli veri yoksa kaybı 0 olarak döndür
+        return
 
     batch = random.sample(replay_buffer, batch_size)
     states, actions_idx, rewards, next_states, dones = zip(*batch)
@@ -98,8 +99,6 @@ def train_dqn(model, target_model, optimizer, loss_fn, replay_buffer, batch_size
     optimizer.zero_grad()
     loss.backward()
     optimizer.step()
-
-    #return loss.item()  # Kaybı döndür
 
 # Modeli test verisi üzerinde değerlendirme
 def evaluate_model(model, test_states, test_actions_idx):
@@ -181,26 +180,21 @@ if __name__ == "__main__":
     gamma = 0.99
 
     # Eğitim döngüsü
-    num_episodes = 5
+    num_episodes = 5  # Eğitim episode sayısı
     for episode in range(num_episodes):
-        total_loss = 0
         total_reward = 0
-
         for i in range(len(replay_buffer)):
-
+            train_dqn(model, target_model, optimizer, loss_fn, replay_buffer, gamma=gamma)
             state, action_idx, reward, next_state, done = replay_buffer[i]
             total_reward += reward
 
+
         print(f"Episode {episode + 1} completed. Total Reward: {total_reward:.2f}")
-
-
-    # Test verisi üzerinde toplam ödülü hesapla
-    #test_total_reward = calculate_test_total_reward(model, test_states, test_actions_idx, test_rewards)
-    #print(f"Test Verisi Üzerinde Toplam Ödül: {test_total_reward:.2f}")
+        
 
     # Modeli test verisi üzerinde değerlendir
     accuracy = evaluate_model(model, test_states, test_actions_idx)
     print(f"Test Verisi Üzerinde Doğruluk: {accuracy * 100:.2f}%")
 
     # Modeli kaydet (isteğe bağlı)
-    torch.save(model.state_dict(), "dqn_model.pth")
+    torch.save(model.state_dict(), "dqn_model.pth")  
