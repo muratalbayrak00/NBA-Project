@@ -19,15 +19,17 @@ Rebase: Eğer develop dalındaki değişiklikleri main dalının üzerine taşı
 
 
 ------------------ YAPILACAKLAR ----------------
-[ ] State lere match score eklenmeli. 
-
-[ ] rakip basket attigin ceza yemeliyiz.
-
-[ ] period bilgisi state e eklenmeli basket atan takimi ayirt etmek icin
-
-[ ] oyuncu id lerinde sikinti olabilir bunlari incele
-
 [ ]
+
+[ ] State lere match score eklenmeli. ( match skoru yeni bulunan veride var oradan bakilacak)
+
+[ ] rakip basket attigin ceza yemeliyiz. 
+
+[ ] period bilgisi state e eklenmeli basket atan takimi ayirt etmek icin ( period bilgisi tolgalarin veride var bunu ekleriz)
+
+[ ] oyuncu id lerinde sikinti olabilir bunlari incele 
+
+[ ] egitim yapilirken iki takim oldugu icin ayri ayri mi dusunulmeli nasil planlanmali bu surec burasi onemli. 
 
 defend fail 
 defend succesfull

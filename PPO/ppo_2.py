@@ -57,3 +57,4 @@ class ActorCritic(nn.Module):
         action_probs = torch.softmax(self.actor(x), dim=-1)
         value = self.critic(x)
         return action_probs, value
+    
