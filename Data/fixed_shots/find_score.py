@@ -40,6 +40,6 @@ for _, row in df_made_shots.iterrows():
     score_progression.append(f"{row['PERIOD']},{int(remaining_time_seconds)},{score_dict[home_team]},{score_dict[away_team]}")
 
 # Dosyayı kaydet (başlıksız format)
-score_table_with_progress_path = "fixed_shots/game_0021500491_score_progression.csv"
+score_table_with_progress_path = "fixed_shots/score_result.csv"
 with open(score_table_with_progress_path, "w") as file:
     file.write("\n".join(score_progression))
