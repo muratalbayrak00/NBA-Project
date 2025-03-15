@@ -36,14 +36,16 @@ for event in data:
         period = moment["period"]
         game_clock = moment["game_clock"]
         shot_clock = moment["shot_clock"]
-        ball_position = moment["ball"][2:]
-        player_positions = np.array([[player[2], player[3]] for player in moment["players"]])
+        ball_position_x = int(moment["ball"][2])
+        ball_position_y = int(moment["ball"][3])
+        ball_position_z = int(moment["ball"][4])
+        player_positions = np.array([[int(player[2]), int(player[3])] for player in moment["players"]])
         if (moment["ball_owner"] is None ):
             ball_owner = 0
         else:
             ball_owner = moment["ball_owner"]["player_id"]
             
-        state = np.concatenate(([period, game_clock, shot_clock],ball_position, player_positions.flatten(), [ball_owner])) # TODO: state'lerimize skor eklenmeli
+        state = np.concatenate(([period, game_clock, shot_clock],[ball_position_x, ball_position_y, ball_position_z], player_positions.flatten(), [ball_owner])) # TODO: state'lerimize skor eklenmeli
         if len(state) == 27:
             momentLength = len(event["moments"])-1
             if(event["end_action"] == "shot") and  i == momentLength:
