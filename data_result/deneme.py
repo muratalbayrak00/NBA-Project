@@ -181,7 +181,7 @@ if __name__ == "__main__":
     gamma = 0.99
 
     # Eğitim döngüsü
-    num_episodes = 6  # Eğitim episode sayısı
+    num_episodes = 70  # Eğitim episode sayısı
     for episode in range(num_episodes):
         total_reward = 0
         for i in range(len(replay_buffer)):
@@ -197,7 +197,7 @@ if __name__ == "__main__":
             # Eğitim adımını gerçekleştir
             train_dqn(model, target_model, optimizer, loss_fn, replay_buffer, gamma=gamma)
 
-            # Toplam ödülü güncelle
+            #Toplam ödülü güncelle
             total_reward += replay_buffer[i][2]
 
         # Epsilon değerini güncelle
@@ -206,8 +206,12 @@ if __name__ == "__main__":
         print(f"Episode {episode + 1} completed.")
 
     # Modeli test verisi üzerinde değerlendir
-    accuracy = evaluate_model(model, test_states, test_actions_idx)
-    print(f"Test Verisi Üzerinde Doğruluk: {accuracy * 100:.2f}%")
+    test_accuracy = evaluate_model(model, test_states, test_actions_idx)
+    print(f"Test Verisi Üzerinde Doğruluk: {test_accuracy * 100:.2f}%")
+
+    # Modeli eğitim verisi üzerinde değerlendir
+    train_accuracy = evaluate_model(model, train_states, train_actions_idx)
+    print(f"Eğitim Verisi Üzerinde Doğruluk: {train_accuracy * 100:.2f}%")
 
     # Modeli kaydet (isteğe bağlı)
     torch.save(model.state_dict(), "dqn_model.pth")

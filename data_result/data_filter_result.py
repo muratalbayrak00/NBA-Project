@@ -44,11 +44,16 @@ for event in data:
             ball_owner = 0
         else:
             ball_owner = moment["ball_owner"]["player_id"]
+
+        home_score = 0
+        visitor_score = 0
             
-        state = np.concatenate(([period, game_clock, shot_clock],[ball_position_x, ball_position_y, ball_position_z], player_positions.flatten(), [ball_owner])) # TODO: state'lerimize skor eklenmeli
-        if len(state) == 27:
+        state = np.concatenate(([period, game_clock, shot_clock],[ball_position_x, ball_position_y, ball_position_z], player_positions.flatten(), [ball_owner, home_score, visitor_score])) # TODO: state'lerimize skor eklenmeli
+        if len(state) == 29:
             momentLength = len(event["moments"])-1
             if(event["end_action"] == "shot") and  i == momentLength:
+                action = "shot"
+            if(event["start_action"] == "shot") and  i == 0:
                 action = "shot"
             else:
                 action = moment["action"]
