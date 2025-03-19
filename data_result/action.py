@@ -3,10 +3,10 @@ import json
 from pathlib import Path
 
 # CSV dosyasının yolu
-csv_path = Path("Data/fixed_shots/score_result.csv")  # CSV dosyanızın tam yolunu buraya yazın
+csv_path = Path("../Data/fixed_shots/score_result.csv")  # CSV dosyanızın tam yolunu buraya yazın
 
 # JSON dosyasının yolu
-json_path = Path("data_result/fdni21500491_result.json")  # JSON dosyanızın tam yolunu buraya yazın
+json_path = Path("fdni21500491_result.json")  # JSON dosyanızın tam yolunu buraya yazın
 
 # CSV verisini oku
 csv_data = []
@@ -67,11 +67,25 @@ for csv_row in csv_data:
                 away_score = away_score + point
                 json_entry[0][27] = home_score
                 json_entry[0][28] = away_score
-        
 
+for json_entry in json_data:
+
+    if json_entry[1] == "shot" and json_entry[0][27] == 0 and json_entry[0][28] == 0:
+        json_entry[1] = ""
+
+home_score = 0
+away_score = 0
+for json_entry in json_data:
+
+    if json_entry[1] == "shot":
+        home_score = json_entry[0][27]
+        away_score = json_entry[0][28]
+    
+    json_entry[0][27] = home_score
+    json_entry[0][28] = away_score
 
 # Değiştirilmiş JSON verisini kaydet
-output_json_path = Path("data_result/action4911.json")  # Çıktı JSON dosyasının tam yolunu buraya yazın
+output_json_path = Path("action491.json")  # Çıktı JSON dosyasının tam yolunu buraya yazın
 with open(output_json_path, 'w') as jsonfile:
     json.dump(json_data, jsonfile)
 

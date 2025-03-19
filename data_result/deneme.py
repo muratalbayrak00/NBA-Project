@@ -181,7 +181,7 @@ if __name__ == "__main__":
     gamma = 0.99
 
     # Eğitim döngüsü
-    num_episodes = 70  # Eğitim episode sayısı
+    num_episodes = 100  # Eğitim episode sayısı
     for episode in range(num_episodes):
         total_reward = 0
         for i in range(len(replay_buffer)):
