@@ -2,7 +2,7 @@ class Constant:
     """A class for handling constants"""
     NORMALIZATION_COEF = 7
     PLAYER_CIRCLE_SIZE = 12 / NORMALIZATION_COEF
-    INTERVAL = 10
+    INTERVAL = 200 # filtrelenmis veri kullaniyrsak butayi degistir yavas akar oyun, 
     DIFF = 6
     X_MIN = 0
     X_MAX = 100

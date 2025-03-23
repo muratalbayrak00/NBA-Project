@@ -3,7 +3,7 @@ from Event import Event
 from Team import Team
 from Constant import Constant
 
-# python3 main.py --path=Animation/data/2016.NBA.Raw.SportVU.Game.Logs/0021500659.json --event=0
+
 class Game:
     """A class for keeping info about the games"""
     def __init__(self, path_to_json, event_index):

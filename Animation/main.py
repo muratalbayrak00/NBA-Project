@@ -1,5 +1,10 @@
 from Game import Game
 import argparse
+ 
+
+# kodu calistirmak icin asagidaki komutu calistir. 
+# cd Animation 
+# python3 main.py --path=data/2016.NBA.Raw.SportVU.Game.Logs/fdni0021500491.json --event=11
 
 parser = argparse.ArgumentParser(description='Process arguments about an NBA game.')
 parser.add_argument('--path', type=str,
