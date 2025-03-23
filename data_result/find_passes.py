@@ -10,9 +10,11 @@ def load_match_data(file_path):
 
 def save_match_data(file_path, data):
     """Save match data to a JSON file."""
-    with open(file_path, 'w') as file:
-        json.dump(data, file)
-
+    #with open(file_path, 'w') as file:
+       # json.dump(data, file)
+    with open(output_file, 'w', encoding='utf-8') as f:
+        json.dump(data, f, indent=4, ensure_ascii=False)  # Girintili JSON formatı
+        
 def parse_state(state):
     """Parse state into meaningful components."""
 
@@ -23,7 +25,6 @@ def parse_state(state):
     players_home = [(state[i], state[i+1]) for i in range(6, 16, 2)]  # Home team players' positions
     players_away = [(state[i], state[i+1]) for i in range(16, 26, 2)]  # Away team players' positions
     ball_owner = state[26]
-
     
     return period, game_clock, shot_clock ,ball_position, players_home, players_away, ball_owner
 
@@ -50,33 +51,46 @@ def detect_action(state1, state2, actions, reward):
 
     return actions,reward
 
-
-
 def update_json_with_actions(file_path):
     """Update the JSON file with actions and print them to console."""
     match_data = load_match_data(file_path)
-
+    
     for i in range(len(match_data) - 1):
         state1 = match_data[i][0]
-        state2 = match_data[i+1][0]
         actions = match_data[i][1]
         reward = match_data[i][2] 
-
-        actions, reward = detect_action(state1, state2, actions, reward)
         
-
-        # Add actions to the JSON data
-        match_data[i][1] = actions
-        match_data[i][2] = reward
+        ball_owner1 = state1[26]  # İlk state'deki top sahibi
+        ball_owner2 = None
+        
+        if ball_owner1 in home_player_ids:
+            boolean= True
+            # Maksimum 5 state boyunca pası kontrol et
+            for j in range(1, 6):
+                if i + j < len(match_data):
+                    state2 = match_data[i + j][0]
+                    ball_owner2 = state2[26]  # Sonraki state'deki geçici top sahibi
+                    
+                    if ball_owner2 != ball_owner1:  # top elden cikti
+                        if boolean == True:
+                            temp = j
+                            boolean = False
+                        if ball_owner2 != 0:  # Top sahibi değişmiş mi?
+                            if ball_owner2 in home_player_ids:
+                                match_data[i+temp-1][1] = "basarili-pass" 
+                                #actions = "bbpass" # basarili
+                            elif ball_owner2 in visitor_player_ids:
+                                match_data[i+temp-1][1] = "basarisiz-pass" # basarisiz
+                            break  # Pası bulduk, daha fazla state kontrol etmeye gerek yok
             
-    # Save updated match data to the file
+            # Güncellenmiş veriyi kaydet
+            #match_data[i+temp][1] = actions
+            #match_data[i+temp][2] = reward
+
     save_match_data(output_file, match_data)
     print(f"Updated JSON file: {output_file}")
 
-
-
-
 if __name__ == "__main__":
-    input_file = "action491.json"  # Girdi JSON dosyasının adı
-    output_file = "with_passes491.json"  # Çıktı JSON dosyasının adı
+    input_file = "data_result/action491.json"  # Girdi JSON dosyasının adı
+    output_file = "data_result/with_passes491.json"  # Çıktı JSON dosyasının adı
     update_json_with_actions(input_file)

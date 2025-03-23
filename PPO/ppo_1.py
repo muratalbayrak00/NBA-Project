@@ -34,7 +34,7 @@ rewards = torch.FloatTensor(rewards)
 class ActorCritic(nn.Module):
     def __init__(self, state_dim, action_dim):
         super(ActorCritic, self).__init__()
-        self.shared_layers = nn.Sequential(
+        self.shared_layers = nn.Sequential( # burasi stateleri isler.
             nn.Linear(state_dim, 256),
             nn.ReLU(),
             nn.Linear(256, 128),
@@ -50,7 +50,8 @@ class ActorCritic(nn.Module):
             nn.ReLU(),
             nn.Linear(64, 1)
         )
-    # burasi statei alır ortak katmanlardan geçirir, aktör ve kritik ağlarını kullanarak aksiyon olasılıklarını ve state değerini hesaplar
+    # burasi statei alır ortak katmanlardan geçirir, aktör ve kritik ağlarını kullanarak 
+    # aksiyon olasılıklarını ve state değerini hesaplar
     def forward(self, state):
         shared = self.shared_layers(state)
         action_logits = self.actor(shared) # logits her bir değer, bir aksiyonun "ham skorunu" temsil eder.
@@ -138,6 +139,10 @@ for episode in range(1000):
 
 # Modeli kaydet
 torch.save(ppo_agent.policy.state_dict(), "ppo_model.pth")
+
+# Actor Ajanın hangi aksiyonu seçeceğini belirler (politikayı öğrenir)
+# Ajanın seçtiği aksiyonun iyi veya kötü olduğunu değerlendirir. Genellikle, değer fonksiyonu (value function) olarak bilinir.
+
 
 
 # JSON dosyası okunur:

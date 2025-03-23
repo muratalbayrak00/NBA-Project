@@ -85,7 +85,7 @@ for json_entry in json_data:
     json_entry[0][28] = away_score
 
 # Değiştirilmiş JSON verisini kaydet
-output_json_path = Path("action491.json")  # Çıktı JSON dosyasının tam yolunu buraya yazın
+output_json_path = Path("data_result/action491.json")  # Çıktı JSON dosyasının tam yolunu buraya yazın
 with open(output_json_path, 'w') as jsonfile:
     json.dump(json_data, jsonfile)
 
