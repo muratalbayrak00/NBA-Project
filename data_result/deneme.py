@@ -33,7 +33,7 @@ def process_data(data):
     rewards = []
 
     # Eylemleri indekslere dönüştürmek için sözlük
-    actions = ["motion", "pass", "shot", ""]
+    actions = ["defend","dribble","pass", "shot", ""]
     action_to_idx = {action: idx for idx, action in enumerate(actions)}
 
     for entry in data:
@@ -101,6 +101,12 @@ def evaluate_model(model, test_states, test_actions_idx):
     correct_predictions = 0
     total_predictions = len(test_states)
 
+    num_0 = 0
+    num_1 = 0
+    num_2 = 0
+    num_3 = 0
+    num_4 = 0
+
     for i in range(total_predictions):
         state = test_states[i]
         true_action_idx = test_actions_idx[i]
@@ -108,13 +114,31 @@ def evaluate_model(model, test_states, test_actions_idx):
         # Modelin tahminini al
         with torch.no_grad():
             state_tensor = torch.tensor(state, dtype=torch.float32)
+            #print(state_tensor)
             q_values = model(state_tensor)
             predicted_action_idx = torch.argmax(q_values).item()
-
+             
+        if predicted_action_idx == 0:
+            num_0 += 1
+        elif predicted_action_idx == 1:
+            num_1 += 1
+        elif predicted_action_idx == 2:
+            num_2 += 1
+        elif predicted_action_idx == 3:
+            num_3 += 1
+        elif predicted_action_idx == 4:
+            num_4 += 1
+        #print("Prediced Action",predicted_action_idx)
+        #print("True Action",true_action_idx)
         # Tahminin doğru olup olmadığını kontrol et
         if predicted_action_idx == true_action_idx:
             correct_predictions += 1
 
+    print("Num_0", num_0)
+    print("Num_1", num_1)
+    print("Num_2", num_2)
+    print("Num_3", num_3)
+    print("Num_4", num_4)
     # Doğruluk hesapla
     accuracy = correct_predictions / total_predictions
     return accuracy
@@ -133,6 +157,7 @@ def calculate_test_total_reward(model, test_states, test_actions_idx, test_rewar
             state_tensor = torch.tensor(state, dtype=torch.float32)
             q_values = model(state_tensor)
             predicted_action_idx = torch.argmax(q_values).item()
+            
 
         # Tahmin edilen eylemin ödülünü topla
         if predicted_action_idx == true_action_idx:
@@ -166,7 +191,7 @@ if __name__ == "__main__":
 
     # Model ve optimizasyon parametreleri
     state_dim = len(train_states[0])  # Durum vektörünün boyutu
-    action_dim = 4  # Eylem sayısı (örneğin, 10 farklı eylem)
+    action_dim = 5  # Eylem sayısı (örneğin, 10 farklı eylem)
     model = DQN(state_dim, action_dim)
     target_model = DQN(state_dim, action_dim)
     target_model.load_state_dict(model.state_dict())
@@ -181,7 +206,7 @@ if __name__ == "__main__":
     gamma = 0.99
 
     # Eğitim döngüsü
-    num_episodes = 100  # Eğitim episode sayısı
+    num_episodes = 50  # Eğitim episode sayısı
     for episode in range(num_episodes):
         total_reward = 0
         for i in range(len(replay_buffer)):
