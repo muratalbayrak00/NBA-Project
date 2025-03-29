@@ -45,7 +45,6 @@ def process_data(data):
         # Eylemi indekse dönüştür
         action_idx = action_to_idx.get(action, -1)  # Bilinmeyen eylemler için -1 döner
         if action_idx == -1:
-            print(f"Bilinmeyen eylem: {action}")
             continue  # Bilinmeyen eylemleri atla
 
         states.append(state)
@@ -148,7 +147,6 @@ def calculate_test_total_reward(model, test_states, test_actions_idx, test_rewar
 if __name__ == "__main__":
     # Dosya yolunu platform bağımsız olarak belirle
     file_path = os.path.join("../Data/find_action", "match_data_493.json")
-    print("Dosya Yolu:", file_path)
 
     # JSON dosyasını yükle
     data = load_match_data(file_path)

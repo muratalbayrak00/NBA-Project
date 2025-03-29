@@ -33,7 +33,6 @@ def filter_data(game_id):
     match_data = []
     for event in data:
         for i,moment in enumerate(event["moments"]):
-            #print(moment)
             period = moment["period"]
             game_clock = moment["game_clock"]
             shot_clock = moment["shot_clock"]

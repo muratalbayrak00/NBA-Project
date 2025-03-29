@@ -62,19 +62,22 @@ def find_action(game_id):
         for json_entry in json_data:
             game_clock = json_entry[0][1] 
             diff_time = abs(remaining_time - game_clock)
-
+            reward = json_entry[2]
+            
             if json_entry[1] == "shot" and diff_time < 5 and period == json_entry[0][0]:
-                if is_home_team == 1:
+                if is_home_team == 1: # eger basarili atisi yapan takim ev sahibi ise 
                     home_score = home_score + point
                     json_entry[0][27] = home_score
                     json_entry[0][28] = away_score
-                elif is_home_team == 0:
+                    reward = 1
+                elif is_home_team == 0: # eger basarili atisi yapan takim rakip sahibi ise 
                     away_score = away_score + point
                     json_entry[0][27] = home_score
                     json_entry[0][28] = away_score
+                    reward = -1
+            json_entry[2] = reward
 
     for json_entry in json_data:
-
         if json_entry[1] == "shot" and json_entry[0][27] == 0 and json_entry[0][28] == 0:
             json_entry[1] = ""
 
@@ -94,7 +97,6 @@ def find_action(game_id):
     #with open(output_json_path, 'w') as jsonfile:
     #    json.dump(json_data, jsonfile)
 
-    #print(f"JSON verisi güncellendi ve {output_json_path} dosyasına kaydedildi.")
     return json_data
 if __name__ == "__main__":
     game_id = "0021500491"

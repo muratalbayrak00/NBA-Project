@@ -93,15 +93,11 @@ class BasketballEnvironment:
                 else:
                     reward = 0  # Başarısız savunma
                     result = "defend_fail"
-            print(result)
-            # State güncelle
-            #print(self.done)
+
             self.state, self.done = self.update_next_state(result)
-            #(self.done)
-            #print(f"State: {state}")
+
         except Exception as e:
             logging.error(f"Error in step function: {e}")
-            #self.done = True
 
         return self.state, reward, self.done#, result
 
@@ -269,7 +265,6 @@ class BasketballEnvironment:
                 new_state[20] = new_state[20] + random.uniform(-1, 1) 
                 new_state[21] = new_state[21] + random.uniform(-1, 1) 
                 new_state[22] = new_state[22] + random.uniform(-1, 1) 
-            print(new_state[23])
             new_state[23] -= 0.2 
             # Oyun bitişini kontrol et
             if new_state[23] <= 0:  # Kalan süre 0 veya daha küçükse oyun biter
@@ -277,7 +272,6 @@ class BasketballEnvironment:
                 print("Game Over! Time's up.")
             else:
                 self.done = False
-            print(3000)
             print(self.done)
             return new_state, self.done
 
@@ -332,7 +326,6 @@ def train_dqn(batch_size=32):
         return
 
     batch = random.sample(replay_buffer, batch_size)
-    #print(f"Replay Buffer Entry: {batch}")  # Bu satırı ekleyin
     #print("_________________________________________________________________________")
 
     states, actions_idx, rewards, next_states, dones = zip(*batch)
@@ -361,19 +354,15 @@ for episode in range(3):
     total_reward = 0
 
     while True:
-        #print("while")
         if random.random() < epsilon:
-            print(4001)
             action_idx = random.randint(0, action_dim - 1)
         else:
-            print(4002)
             with torch.no_grad():
                 q_values = model(torch.tensor(state, dtype=torch.float32))
                 action_idx = torch.argmax(q_values).item()
 
         action = actions[action_idx]
         next_state, reward, done = env.step(action)
-        print(done)
         #replay_buffer.clear
         max_size = 10000
         if len(replay_buffer) > max_size:
@@ -381,22 +370,20 @@ for episode in range(3):
 
         # Replay buffer'a ekleme sırasında None kontrolü
         if next_state is not None:
-            print(4003)
+
             replay_buffer.append((state, action_idx, reward, next_state, done))
             if len(replay_buffer) > 10000:
-                print(4004)
+
                 replay_buffer.pop(0)
         else:
-            print(4005)
             logging.warning(f"Next state is None at Event {env.event_idx}, Moment {env.moment_idx}")
 
         train_dqn()
-        #print(done)
+
 
         #state = next_state if next_state is not None else state
         total_reward += reward
         if done:
-            print("break")
             break
 
     epsilon = max(epsilon * epsilon_decay, epsilon_min)

@@ -50,12 +50,10 @@ class BasketballEnvironment:
         for pos in player:
             player_position = pos[1:]
             distance = np.linalg.norm(player_position - ball_position) # euclidian 
-            #print(distance)
             if (distance < min_distance):
                 min_distance = distance
                 min_id = pos[0]
-                #print( min_distance)
-                #print(min_id)
+
         min_id = int(min_id)
         if (min_distance < 2):
             return min_id
@@ -79,31 +77,24 @@ class BasketballEnvironment:
                 [player[2], player[3]] for player in current_moment[5]
             ])
             player_positions = np.delete(player_positions, 0, axis=0)  # Topu çıkar
-            #print(player_positions)
             ball_position = current_moment[5][0][2:]  # Topun koordinatları
             time_remaining = current_moment[3]  # Zaman bilgisi
 
              # Topu tutan oyuncuyu bul
             ball_holder = self.identify_ball_holder(current_moment)
-            #print(f"Ball holder: {ball_holder}")
             # State'i oluştur
             state = np.concatenate((player_positions.flatten(), ball_position, [time_remaining, ball_holder])) # TODO: state'lerimize skor eklenmeli 
             np.set_printoptions(suppress=True)
-            #print(f"State: {state}")
 
             # Eğer state beklenen boyutta değilse hata ver
             if len(state) != 25:
                 logging.error(f"Unexpected state size in Event {self.event_idx}, Moment {self.moment_idx}: {len(state)}")
-                print("burası patlıyor.")
                 self.moment_idx += 1
                 if self.moment_idx >= len(moments):
                     self.event_idx += 1
                     self.moment_idx = 1
                     self.process_moment()
                     if self.event_idx >= len(self.events):
-                        print("----------------------------------------------------------------------")
-                        print(self.event_idx)
-                        print(self.events)
                         return None, True  # Tüm eventler bitti
 
             # Bir sonraki momenti işlemek için ilerle
@@ -112,9 +103,6 @@ class BasketballEnvironment:
                 self.event_idx += 1
                 self.moment_idx = 1
                 if self.event_idx >= len(self.events):
-                    print("----------------------------------------------------------------------")
-                    print(self.event_idx)
-                    print(self.events)
                     return None, True  # Tüm eventler bitti
 
             return state, False
@@ -140,11 +128,9 @@ class BasketballEnvironment:
                 if random.random() < success_rate:
                     reward = 15  # Başarılı şut
                     result = "shot_made"
-                    print(result)
                 else:
                     reward = -2  # Başarısız şut
                     result = "shot_missed"
-                    print(result)
 
             elif action == "pass":
                 # Pasın başarı oranı, top tutan oyuncu ve yakınındaki oyuncuların pozisyonlarına bağlı olabilir
@@ -154,11 +140,9 @@ class BasketballEnvironment:
                     if random.random() < success_rate:
                         reward = 3  # Başarılı pas
                         result = "pass_success"
-                        print(result)
                     else:
                         reward = -1  # Top kaybı
                         result = "turnover"
-                        print(result)
 
             elif action in ["move_up", "move_down", "move_left", "move_right"]:
                 # Oyuncunun hareketi
@@ -174,7 +158,6 @@ class BasketballEnvironment:
                     player_positions[ball_holder - 1] += movement[action]  # Top tutan oyuncunun pozisyonunu değiştir
                     reward = 1  # Hareket için küçük bir ödül
                     result = "move_success"
-                    print(result)
 
             elif action == "defend":
                 # Savunma aksiyonları
@@ -185,15 +168,12 @@ class BasketballEnvironment:
                         reward = 5  # Başarılı top çalma
                         self.state[-1] = 0  # Top artık serbest
                         result = "steal"
-                        print(result)
                     else:
                         reward = -1  # Başarısız savunma
                         result = "defend_fail"
-                        print(result)
 
             # State güncelle
             self.state, self.done = self.process_moment()
-            print(f"State: {state}")
         except Exception as e:
             logging.error(f"Error in step function: {e}")
             #self.done = True
@@ -274,7 +254,6 @@ for episode in range(200):
     total_reward = 0
 
     while True:
-        #print("while")
         if random.random() < epsilon:
             action_idx = random.randint(0, action_dim - 1)
         else:
@@ -298,7 +277,6 @@ for episode in range(200):
         state = next_state if next_state is not None else state
         total_reward += reward
         if done:
-            print("break")
             break
 
     epsilon = max(epsilon * epsilon_decay, epsilon_min)
@@ -306,16 +284,13 @@ for episode in range(200):
 
 # Modeli kaydetme (eğitim tamamlandıktan sonra)
 torch.save(model.state_dict(), "dqn_model.pth")
-#print("Model kaydedildi.")
 # Modeli yükleme
 model.load_state_dict(torch.load("dqn_model.pth", weights_only=True))
 model.eval()  # Modeli değerlendirme moduna alır
-#print("Model yüklendi ve değerlendiriliyor.")
 # Modelin bir state üzerinde aksiyon tahmin etmesi
 state = env.reset()  # Örnek bir başlangıç durumu
 with torch.no_grad():
     q_values = model(torch.tensor(state, dtype=torch.float32))
     action_idx = torch.argmax(q_values).item()
 
-#print(f"Modelin verdiği aksiyon: {action_idx}")
 

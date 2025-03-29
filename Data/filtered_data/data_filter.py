@@ -36,12 +36,10 @@ def identify_ball_holder(current_moment):
     for pos in player:
         player_position = pos[1:]
         distance = np.linalg.norm(player_position - ball_position) # euclidian 
-        #print(distance)
         if (distance < min_distance):
             min_distance = distance
             min_id = pos[0]
-            #print( min_distance)
-            #print(min_id)
+
     min_id = int(min_id)
     if (min_distance < 2):
         return min_id
@@ -51,7 +49,6 @@ def identify_ball_holder(current_moment):
 match_data = []
 for event in data["events"]:
     for moment in event["moments"]:
-        #print(moment)
         player_positions = np.array([[player[2], player[3]] for player in moment[5]])
         player_positions = np.delete(player_positions, 0, axis=0)  # Topu çıkar
         ball_position = moment[5][0][2:]  # Topun koordinatları

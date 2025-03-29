@@ -13,42 +13,6 @@ def save_match_data(file_path, data):
     #with open(output_file, 'w', encoding='utf-8') as f:
         #json.dump(data, f, indent=4, ensure_ascii=False)  # Girintili JSON formatı
         
-def parse_state(state):
-    """Parse state into meaningful components."""
-
-    period = state[0]
-    game_clock = state[1]
-    shot_clock = state[2]
-    ball_position = (state[3], state[4], state[5])  # Ball position (x, y, z)
-    players_home = [(state[i], state[i+1]) for i in range(6, 16, 2)]  # Home team players' positions
-    players_away = [(state[i], state[i+1]) for i in range(16, 26, 2)]  # Away team players' positions
-    ball_owner = state[26]
-    
-    return period, game_clock, shot_clock ,ball_position, players_home, players_away, ball_owner
-
-def detect_action(state1, state2, actions, reward):
-
-    """Detect the action that occurred between two states."""
-
-    period1, game_clock1, shot_clock1 ,ball_position1, players_home1, players_away1, ball_owner1 = parse_state(state1)
-    period2, game_clock2, shot_clock2 ,ball_position2, players_home2, players_away2, ball_owner2 = parse_state(state2)
-    if actions == "miss":
-        actions = ""
-
-    if actions == "shot":
-        reward = 1
-    elif actions == "pass":
-        reward = 0.1
-    #elif ball_owner1 in home_player_ids :
-        #if ball_owner2 in home_player_ids and ball_owner1 != ball_owner2:
-           # actions = "pass"
-           # reward = 0.1
-      #  elif ball_owner2 in visitor_player_ids:
-        #    actions = "pass"
-        #    reward = -0.2       
-
-    return actions,reward
-
 def get_player_id(game_id):
 
     file_path = f"Row_data/{game_id}_result.json"
@@ -93,7 +57,6 @@ def update_json_with_actions(game_id):
 
     """Update the JSON file with actions and print them to console."""
     match_data = input_json
-    print(len(match_data))
     home_pass = 0
     visitor_pass = 0
     for i in range(len(match_data) - 1):
@@ -108,15 +71,12 @@ def update_json_with_actions(game_id):
                 
             elif state[26] in visitor_player_ids:
                 action = ""
-                visitor_pass += 1
-                
-        elif action == "shot":
-            reward = 1
+                visitor_pass += 1       
+        # shot lara reward verme islemini action.py da score islemini yazarken yapiyoruz
+        
         match_data[i][1] = action
         match_data[i][2] = reward
-    #print("home pass",home_pass)
-    #print("visitor pass",visitor_pass)
-    
+    # bu fonksiyon baslari buluyor
     for i in range(len(match_data) - 1):
         state1 = match_data[i][0] 
         ball_owner1 = state1[26]  # İlk state'deki top sahibi
@@ -137,7 +97,6 @@ def update_json_with_actions(game_id):
                             if ball_owner2 in home_player_ids:
                                 match_data[i+temp-1][1] = "pass" 
                                 match_data[i+temp-1][2] = 0.1
-                                #actions = "bbpass" # basarili
                             elif ball_owner2 in visitor_player_ids:
                                 match_data[i+temp-1][1] = "pass" # basarisiz
                                 match_data[i+temp-1][2] = -0.2
@@ -158,6 +117,14 @@ def update_json_with_actions(game_id):
                     reward = -0.2
             match_data[i][1] = action
             match_data[i][2] = reward
+
+    # home player id lere 1, visitor id lere 2 ataniyor burda
+    for i in range(len(match_data) - 1):
+        state = match_data[i][0]
+        if state[26] in home_player_ids:
+            state[26] = 1
+        elif state[26] in visitor_player_ids:
+            state[26] = 2       
 
     save_match_data(output_file, match_data)
     print(f"Updated JSON file: {output_file}")

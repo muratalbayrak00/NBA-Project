@@ -29,8 +29,6 @@ def parse_state(state):
     return players_home, players_away, ball_position, game_clock, shot_clock, ball_owner, period
 
 def detect_action(state1, state2):
-    #print(state1)
-    #print(state2)
     """Detect the action that occurred between two states."""
     players_home1, players_away1, ball_position1, game_clock1, shot_clock1, ball_owner1, period1 = parse_state(state1)
     players_home2, players_away2, ball_position2, game_clock2, shot_clock2, ball_owner2, period2 = parse_state(state2)
@@ -97,9 +95,6 @@ def update_json_with_actions(file_path):
         state1 = match_data[i][0]
         state2 = match_data[i+1][0]
         actions, reward = detect_action(state1, state2)
-        
-        # Print actions to console
-        #print(f"Actions between state {i} and state {i+1}: {actions}")
         
         # Add actions to the JSON data
         match_data[i][1] = actions

@@ -13,13 +13,11 @@ Merge: Eğer main dalındaki değişiklikleri develop dalına birleştirmek isti
 Rebase: Eğer develop dalındaki değişiklikleri main dalının üzerine taşımak ve daha temiz bir tarihçe istiyorsan, rebase kullan.
 
 ----------   SORULAR   ------------
- => Verimizde eksiklik oldugunu dusunuyoruz. Bir macta gerceklesen sayilar gercek maclar ile tutarli degil. 
 
- =>
 
 
 ------------------ YAPILACAKLAR ----------------
-[ ]
+[ ] period degisimlerinde pota yonu degismeli
 
 [x] State lere match score eklenmeli. ( match skoru yeni bulunan veride var oradan bakilacak)
 
@@ -27,16 +25,6 @@ Rebase: Eğer develop dalındaki değişiklikleri main dalının üzerine taşı
 
 [x] period bilgisi state e eklenmeli basket atan takimi ayirt etmek icin ( period bilgisi tolgalarin veride var bunu ekleriz)
 
-[ ] oyuncu id lerinde sikinti olabilir bunlari incele 
+[x] oyuncu id lerinde sikinti olabilir bunlari incele 
 
 [ ] egitim yapilirken iki takim oldugu icin ayri ayri mi dusunulmeli nasil planlanmali bu surec burasi onemli. 
-
-[ ] action daki shotlar eksik
-
-defend fail 
-defend succesfull
-dribble 
-succesfull shot 
-missed shot 
-succesfull shot
-missed shot 

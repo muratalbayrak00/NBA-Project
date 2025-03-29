@@ -100,9 +100,6 @@ def main():
             action = agent.select_action(state)
             next_state = update_state(state, action)  # State güncellendi
             reward = dataset[t + 1][2] if t + 1 < len(dataset) else 0
-            print("Reward: ", reward)
-            print("---------------------------------------------------")
-            print(state, action, next_state)
             agent.update(state, action, reward, next_state, done)
             
             state = next_state
