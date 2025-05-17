@@ -65,6 +65,10 @@ gameclock_text = ax.text((Constant.X_MIN + Constant.X_MAX) / 2, Constant.Y_MAX +
 shotclock_text = ax.text((Constant.X_MIN + Constant.X_MAX) / 2, Constant.Y_MAX + 2,
                          '', fontsize=10, ha='center', weight='bold', zorder=4)
 
+# SAHANIN DIŞINDA SAĞ ÜST KÖŞEYE ACTION TYPE YAZISI
+action_text = ax.text(Constant.X_MAX + 2, Constant.Y_MAX + 6, '', 
+                     fontsize=12, ha='right', va='top', color='purple', weight='bold', zorder=5)
+
 current_frame = [0]  # Liste olarak tut, referansla değiştirilebilir
 
 def update(frame):
@@ -84,8 +88,12 @@ def update(frame):
     gameclock_text.set_text(f'Game Clock: {game_clock}')
     shotclock_text.set_text(f'Shot Clock: {shot_clock:.1f}')
 
+    # ACTION TYPE YAZISINI GÜNCELLE
+    action_type = data[frame][1] if len(data[frame]) > 1 else ""
+    action_text.set_text(f'Action: {action_type}')
+
     fig.canvas.draw_idle()
-    return ball, home_dots, away_dots, score_text, gameclock_text, shotclock_text
+    return ball, home_dots, away_dots, score_text, gameclock_text, shotclock_text, action_text
 
 def next_frame(event):
     if current_frame[0] < len(data) - 1:
