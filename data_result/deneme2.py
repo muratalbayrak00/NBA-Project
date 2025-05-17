@@ -524,6 +524,15 @@ log_dir = "match_logs"
 os.makedirs(log_dir, exist_ok=True)
 def round_state(state):
     return [round(float(x), 2) for x in state]
+def find_action(action):
+    action_map = {
+        0: "pass",
+        1: "shot",
+        2: "defend",
+        3: "dribble",
+        4: ""
+    }
+    return action_map.get(action, "unknown")
 episodes = 25  # Online eğitim için epizod sayısı
 for episode in range(episodes):
     state = env.reset()
@@ -572,7 +581,7 @@ for episode in range(episodes):
             env.state = next_state  # State güncellenir (oyun bir sonraki adıma geçer)
             total_reward += reward
         state_list = env.state.cpu().numpy().tolist()
-        match_states.append([round_state(state_list), [], []])
+        match_states.append([round_state(state_list), [find_action(action)], [reward]])
 
 
         # Online öğrenme adımı
