@@ -480,29 +480,75 @@ loss_fn = nn.MSELoss()
 memory = deque(maxlen=10000)
 
 gamma = 0.95  
-epsilon = 0.25
+epsilon_home = 0.05   # Ev sahibi için düşük
+epsilon_away = 0.25 
 epsilon_min = 0.01 
 epsilon_decay = 0.995  
 batch_size = 32  
 
+def mirror_period_states_if_needed(period_data):
+    """
+    Eğer periyot başındaki oyuncuların ortalaması sağ yarı sahadaysa,
+    periyottaki tüm state'lerin top ve oyuncu x konumlarını simetrik yapar.
+    """
+    if len(period_data) == 0:
+        return period_data
+    first_state = period_data[0][0]
+    player_xs = [first_state[i] for i in range(6, 16, 2)]
+    avg_x = sum(player_xs) / len(player_xs)
+    if avg_x > 47:
+        for sample in period_data:
+            state = sample[0]
+            # Topun x'i
+            state[3] = 94 - state[3]
+            # Oyuncuların x'leri
+            for i in range(6, 26, 2):
+                state[i] = 94 - state[i]
+    return period_data
+
+def split_by_period(data):
+    """
+    Veriyi periyotlara böler. Her periyot ayrı bir liste olarak döner.
+    """
+    periods = []
+    current = []
+    last_period = None
+    for sample in data:
+        period = sample[0][0]
+        if last_period is not None and period != last_period:
+            periods.append(current)
+            current = []
+        current.append(sample)
+        last_period = period
+    if current:
+        periods.append(current)
+    return periods
+
 # ------------------ 5. Offline Pretraining ------------------ #
-# Offline veriyi yükle ve replay buffer'a ekle
-#offline_data_path = "with_passes491.json"  # Offline verinizi içeren dosya
-offline_data_path = "Last_result_data/21500003_last_result.json"
-try:
-    offline_data = load_offline_data(offline_data_path)
-    for sample in offline_data:
-        # Her örnek: [state, action, reward]
-        state, action, reward = sample
-        state_tensor = torch.FloatTensor(state).to(device)
-        # Offline veride next_state bilgisi olmadığı için mevcut state kullanılıyor
-        next_state_tensor = torch.FloatTensor(state).to(device)
-        # Tek adımlık deneyim olarak kabul edip terminal durum (done=True) atıyoruz
-        done = True
-        memory.append((state_tensor, action, reward, next_state_tensor, done))
-    print(f"Offline veriden {len(offline_data)} deney replay buffer'a eklendi.")
-except Exception as e:
-    print("Offline veri yüklenemedi:", e)
+offline_data_dir = "Last_result_data"
+offline_files = [f for f in os.listdir(offline_data_dir) if f.endswith(".json")]
+
+total_offline_samples = 0
+for file in offline_files:
+    offline_data_path = os.path.join(offline_data_dir, file)
+    try:
+        offline_data = load_offline_data(offline_data_path)
+        periods = split_by_period(offline_data)
+        for period_data in periods:
+            # Periyot başında simetri gerekiyorsa tüm periyot state'lerine uygula
+            period_data = mirror_period_states_if_needed(period_data)
+            for sample in period_data:
+                state, action, reward = sample
+                state_tensor = torch.FloatTensor(state).to(device)
+                next_state_tensor = torch.FloatTensor(state).to(device)
+                done = True
+                memory.append((state_tensor, action, reward, next_state_tensor, done))
+            total_offline_samples += len(period_data)
+        #print(f"{file} dosyasından {len(offline_data)} deney eklendi.")
+    except Exception as e:
+        print(f"{file} yüklenemedi:", e)
+
+print(f"Toplam {total_offline_samples} offline deney replay buffer'a eklendi.")
 
 # Offline pretraining için belirli adım sayısı (örneğin 1000 iterasyon)
 pretrain_steps = 1
@@ -520,7 +566,6 @@ for step in range(pretrain_steps):
     dones = torch.BoolTensor(dones).to(device)
 
     q_values = dqn(states).gather(1, actions.unsqueeze(1)).squeeze(1)
-    # Her örnek terminal kabul edildiği için target Q değeri sadece ödül
     target_q_values = rewards
 
     loss = loss_fn(q_values, target_q_values)
@@ -559,7 +604,7 @@ for episode in range(episodes):
             # Aksiyon seçimi
         if ball_control == 1:  # Ev sahibi
             #print(env.state)
-            if random.random() < epsilon:
+            if random.random() < epsilon_home:
                 action = random.choice(valid_actions)
             else:
                 with torch.no_grad():
@@ -584,7 +629,7 @@ for episode in range(episodes):
                 env.state[i] = 47 * 2 - env.state[i]  # x pozisyonunu simetrik yap
 
             #print(env.state)
-            if random.random() < epsilon:
+            if random.random() < epsilon_away:
                 action = random.choice(valid_actions)
             else:
                 with torch.no_grad():
@@ -633,8 +678,9 @@ for episode in range(episodes):
     home_score, away_score = score[0], score[1]
 
     # Epsilon değerini azalt
-    epsilon = max(epsilon_min, epsilon * epsilon_decay)
-    print(f"Episode {episode + 1}/{episodes}, Reward: {total_reward:.2f}, Epsilon: {epsilon:.4f}, Score: {home_score:.0f}-{away_score:.0f}")
+    epsilon_home = max(epsilon_min, epsilon_home * epsilon_decay)
+    epsilon_away = max(epsilon_min, epsilon_away * epsilon_decay)
+    print(f"Episode {episode + 1}/{episodes}, Reward: {total_reward:.2f}, Epsilon Home: {epsilon_home:.4f},Epsilon Away: {epsilon_away:.4f}, Score: {home_score:.0f}-{away_score:.0f}")
     #print(env.state)
 
 

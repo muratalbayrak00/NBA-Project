@@ -18,11 +18,12 @@ class Constant:
     Y_MAX = 50
 
 # JSON verisini oku
-with open("../data_result/match_logs/episode_1.json", "r") as f:
+with open("../data_result/Last_result_data/21500003_last_result.json", "r") as f:
     data = json.load(f)
 
 def get_coordinates(entry):
     state = entry[0]
+    period = state[0]
     ball_x = state[3]
     ball_y = state[4]
     players = [(state[i], state[i+1]) for i in range(6, 6 + 20, 2)]  # 10 oyuncu
@@ -31,7 +32,7 @@ def get_coordinates(entry):
     away_score = state[28]
     game_clock = state[1]
     shot_clock = state[2]
-    return ball_x, ball_y, players, possession, home_score, away_score, game_clock, shot_clock
+    return period, ball_x, ball_y, players, possession, home_score, away_score, game_clock, shot_clock
 
 # Saha çizimi
 fig, ax = plt.subplots(figsize=(Constant.X_MAX / 10, (Constant.Y_MAX + 10) / 10))  # Ekstra yukarı boşluk
@@ -57,6 +58,8 @@ home_dots, = ax.plot([], [], 'bo', markersize=8, zorder=3)
 away_dots, = ax.plot([], [], 'go', markersize=8, zorder=3)
 
 # Üst merkeze sabit yazılar
+period_text = ax.text((Constant.X_MIN + Constant.X_MAX) / 2, Constant.Y_MAX + 8,
+                      '', fontsize=10, ha='center', weight='bold', zorder=4)
 score_text = ax.text((Constant.X_MIN + Constant.X_MAX) / 2, Constant.Y_MAX + 6,
                      '', fontsize=10, ha='center', weight='bold', zorder=4)
 gameclock_text = ax.text((Constant.X_MIN + Constant.X_MAX) / 2, Constant.Y_MAX + 4,
@@ -64,8 +67,9 @@ gameclock_text = ax.text((Constant.X_MIN + Constant.X_MAX) / 2, Constant.Y_MAX +
 shotclock_text = ax.text((Constant.X_MIN + Constant.X_MAX) / 2, Constant.Y_MAX + 2,
                          '', fontsize=10, ha='center', weight='bold', zorder=4)
 
+
 def update(frame):
-    ball_x, ball_y, players, possession, home_score, away_score, game_clock, shot_clock = get_coordinates(data[frame])
+    period, ball_x, ball_y, players, possession, home_score, away_score, game_clock, shot_clock = get_coordinates(data[frame])
 
     home_players = players[:5]
     away_players = players[5:]
@@ -77,11 +81,12 @@ def update(frame):
     home_dots.set_data(home_xs, home_ys)
     away_dots.set_data(away_xs, away_ys)
 
+    period_text.set_text(f'Period: {int(period)}')
     score_text.set_text(f'Possession: {possession} | Score: {home_score} - {away_score}')
     gameclock_text.set_text(f'Game Clock: {game_clock}')
     shotclock_text.set_text(f'Shot Clock: {shot_clock:.1f}')
 
-    return ball, home_dots, away_dots, score_text, gameclock_text, shotclock_text
+    return ball, home_dots, away_dots, period_text, score_text, gameclock_text, shotclock_text
 
 ani = animation.FuncAnimation(fig, update, frames=len(data), interval=100, blit=True)
 plt.show()
