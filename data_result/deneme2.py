@@ -142,6 +142,19 @@ class BasketballEnv:
         ball_x = new_state[3]
         ball_y = new_state[4]
 
+        if(new_state[3] < self.COURT_MIN_X or new_state[3] > self.COURT_MAX_X or new_state[4] < self.COURT_MIN_Y or new_state[4] > self.COURT_MAX_Y):
+            new_state[26] = 3 - int(new_state[26])
+            new_owner_start = 16
+            new_state[3] = min(max(new_state[3], self.COURT_MIN_X), self.COURT_MAX_X)
+            new_state[4] = min(max(new_state[4], self.COURT_MIN_Y), self.COURT_MAX_Y)
+            new_state[5] = 5.0
+            new_state[new_owner_start] = new_state[3]
+            new_state[new_owner_start + 1] = new_state[4]
+            done = new_state[1] <= 0
+            reward = 0 
+            return new_state, reward, done
+
+
         if action == 0:  # PASS
             target_index = self.select_pass_target(new_state, ball_x, ball_y)
             if target_index is not None: # TODO: none donmuyor zaten hic o yuzden else kismi olmasada olur gibi
@@ -183,7 +196,7 @@ class BasketballEnv:
 
             # Rakip oyunculara (16–26 arası veya 6–16 arası) olan minimum mesafe
             defender_start = 16 
-            defender_end = 26 
+            defender_end = 26  
             min_defender_distance = float('inf')
 
             for i in range(defender_start, defender_end, 2):
@@ -271,7 +284,7 @@ class BasketballEnv:
                 new_state[26] = 3 - ball_owner  # top rakip takıma geçer
 
                 # Top rakip PG oyuncusuna verilir (örnek: takım başlangıç indexi)
-                new_owner_start = 6 if new_state[26] == 1 else 16
+                new_owner_start = 6
                 new_state[3] = new_state[new_owner_start]
                 new_state[4] = new_state[new_owner_start + 1]
                 new_state[5] = 5.0
@@ -316,8 +329,8 @@ class BasketballEnv:
         elif action == 3:  # dribble
             ball_owner = int(state[26])
             player_start = 6 if ball_owner == 1 else 16
-            defender_start = 16 if ball_owner == 1 else 6
-            defender_end = 26 if ball_owner == 1 else 16
+            defender_start = 16
+            defender_end = 26 
 
             ball_x = new_state[3]
             ball_y = new_state[4]
@@ -560,10 +573,16 @@ for episode in range(episodes):
             total_reward += reward
 
         elif ball_control == 2:  # Rakip
+            x = env.state.clone()
+            #print(x)
+            temp = env.state[6:16].clone()
+            env.state[6:16] = env.state[16:26]
+            env.state[16:26] = temp
             #print(env.state)
             env.state[3] = 47 * 2 - env.state[3]
             for i in range(6, 26, 2):
                 env.state[i] = 47 * 2 - env.state[i]  # x pozisyonunu simetrik yap
+
             #print(env.state)
             if random.random() < epsilon:
                 action = random.choice(valid_actions)
@@ -574,9 +593,13 @@ for episode in range(episodes):
             
             next_state, reward, done = env.step(action)  # Bu kısımda yeni state alınır
             next_state = next_state.to(device)  # Cihaza taşıma işlemi (önce CPU'ya gerek yok)
+            temp = next_state[6:16].clone()
+            next_state[6:16] = next_state[16:26]
+            next_state[16:26] = temp
             next_state[3] = 47 * 2 - next_state[3]
             for i in range(6, 26, 2):
                 next_state[i] = 47 * 2 - next_state[i]  # x pozisyonunu simetrik yap
+            #print(next_state)    
             memory.append((env.state, action, reward, next_state, done))  # Memory'e ekle
             env.state = next_state  # State güncellenir (oyun bir sonraki adıma geçer)
             total_reward += reward
