@@ -54,7 +54,7 @@ def draw_heat_maps_from_json(json_path, output_dir="heatmaps"):
         plt.ylim(0, 50)
         plt.xlabel("Court Length")
         plt.ylabel("Court Width")
-        plt.savefig(os.path.join(output_dir, "home_team_movement_heatmap.png"))
+        plt.savefig(os.path.join(output_dir, "home_team_movement_heatmap_2.png"))
         plt.close()
 
     # B. Away Team Movement Heatmap
@@ -67,7 +67,7 @@ def draw_heat_maps_from_json(json_path, output_dir="heatmaps"):
         plt.ylim(0, 50)
         plt.xlabel("Court Length")
         plt.ylabel("Court Width")
-        plt.savefig(os.path.join(output_dir, "away_team_movement_heatmap.png"))
+        plt.savefig(os.path.join(output_dir, "away_team_movement_heatmap_2.png"))
         plt.close()
 
     # C. Combined Movement Heatmap
@@ -83,7 +83,7 @@ def draw_heat_maps_from_json(json_path, output_dir="heatmaps"):
         plt.xlabel("Court Length")
         plt.ylabel("Court Width")
         plt.legend()
-        plt.savefig(os.path.join(output_dir, "combined_movement_heatmap.png"))
+        plt.savefig(os.path.join(output_dir, "combined_movement_heatmap_2.png"))
         plt.close()
 
     # D. Shot Density Heatmap - Home
@@ -96,7 +96,7 @@ def draw_heat_maps_from_json(json_path, output_dir="heatmaps"):
         plt.ylim(0, 50)
         plt.xlabel("Court Length")
         plt.ylabel("Court Width")
-        plt.savefig(os.path.join(output_dir, "home_shot_density_heatmap.png"))
+        plt.savefig(os.path.join(output_dir, "home_shot_density_heatmap_2.png"))
         plt.close()
 
     # E. Shot Density Heatmap - Away
@@ -109,7 +109,7 @@ def draw_heat_maps_from_json(json_path, output_dir="heatmaps"):
         plt.ylim(0, 50)
         plt.xlabel("Court Length")
         plt.ylabel("Court Width")
-        plt.savefig(os.path.join(output_dir, "away_shot_density_heatmap.png"))
+        plt.savefig(os.path.join(output_dir, "away_shot_density_heatmap_2.png"))
         plt.close()
 
     # F. Combined Shot Density Heatmap
@@ -125,7 +125,7 @@ def draw_heat_maps_from_json(json_path, output_dir="heatmaps"):
         plt.xlabel("Court Length")
         plt.ylabel("Court Width")
         plt.legend()
-        plt.savefig(os.path.join(output_dir, "combined_shot_density_heatmap.png"))
+        plt.savefig(os.path.join(output_dir, "combined_shot_density_heatmap_2.png"))
         plt.close()
 
     # G. Ball Movement Heatmap
@@ -138,13 +138,13 @@ def draw_heat_maps_from_json(json_path, output_dir="heatmaps"):
         plt.ylim(0, 50)
         plt.xlabel("Court Length")
         plt.ylabel("Court Width")
-        plt.savefig(os.path.join(output_dir, "ball_movement_heatmap.png"))
+        plt.savefig(os.path.join(output_dir, "ball_movement_heatmap_2.png"))
         plt.close()
 
     print(f"Heatmaps saved to '{output_dir}'")
 
 if __name__ == "__main__":
-    file_path = '21500491_last_result.json'
+    file_path = '../data_result/match_logs/episode_1.json'
 
     draw_heat_maps_from_json(file_path)
     
