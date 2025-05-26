@@ -1070,7 +1070,7 @@ for episode in range(episodes):
     epsilon_home = max(epsilon_min, epsilon_home * epsilon_decay)
     epsilon_away = max(epsilon_min, epsilon_away * epsilon_decay)
     logging.info(f"Episode {episode + 1}/{episodes}, Reward: {total_reward:.2f}, Epsilon Home: {epsilon_home:.4f}, Epsilon Away: {epsilon_away:.4f}, Score: {home_score:.0f}-{away_score:.0f}")
-    if (episode + 1) % 100 == 0:
+    if (episode + 1) % 1000 == 0:
         with open(os.path.join(log_dir, f"dqn_100000_episode_{episode+1}.json"), "w") as f:json.dump(match_states, f)
 # Eğitim tamamlandıktan sonra modeli kaydet
 torch.save(dqn.state_dict(), "dqn_100000_model.pth")
