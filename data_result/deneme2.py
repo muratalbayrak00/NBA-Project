@@ -29,6 +29,7 @@ class BasketballEnv:
         self.shot_steps_remaining = 0
         self.shot_success = 0
         self.shot_points = 0
+        self.shot_distance = 0 
         self.shot_distance_x = 0
         self.shot_distance_y = 0
         self.last_touch = 0
@@ -38,6 +39,8 @@ class BasketballEnv:
         self.away_pass = False
         self.home_shot = False
         self.home_pass = False
+        self.ball_holder = 0 
+        
 
     def reset(self):
         """Oyunu sıfırlar ve başlangıç durumunu döndürür."""
@@ -157,6 +160,7 @@ class BasketballEnv:
             state[26] = 0
 
         return state
+    
     def set_away_zone_defense(self, state):
         """
         Away takım oyuncuları (index 5-9) klasik 2-3 alan savunması bölgelerine yerleşir.
@@ -165,12 +169,38 @@ class BasketballEnv:
         zone_centers = [
             (60, 41),  # Guard 1 (sol üst)
             (81, 41),  # Guard 2 (sağ üst)
-            (60, 25),  # Forward 1 (sol alt)
-            (81, 25),  # Forward 2 (sağ alt)
-            (70, 10),  # Center (pota önü)
+            (60, 10),  # Forward 1 (sol alt)
+            (81, 10),  # Forward 2 (sağ alt)
+            (70, 25),  # Center (pota önü)
         ]
+        ball_x = state[3]
+        ball_y = state[4]
+        min_distance = float('inf')
+        closest_defender_idx = None
+        # En yakın savunmacıyı bul
+        for i in range(16, 26, 2):
+            dx = ball_x - state[i]
+            dy = ball_y - state[i+1]
+            distance = math.sqrt(dx**2 + dy**2)
+            if distance < min_distance:
+                min_distance = distance
+                closest_defender_idx = i
+
+        # En yakın savunmacı topa doğru koşsun
+        if closest_defender_idx is not None:
+            dx = ball_x - state[closest_defender_idx]
+            dy = ball_y - state[closest_defender_idx + 1]
+            norm = math.sqrt(dx**2 + dy**2)
+            if norm != 0:
+                dx /= norm
+                dy /= norm
+                state[closest_defender_idx] += dx * np.random.uniform(2.0, 3.0) # hızını değiştirebilirsin
+                state[closest_defender_idx + 1] += dy * np.random.uniform(2.0, 3.0)
+
         # Away oyuncularının indexleri: 5 oyuncu, state[16], state[18], ..., state[24]
         for idx, (zone_x, zone_y) in zip(range(16, 26, 2), zone_centers):
+            if idx == closest_defender_idx:
+                continue
             px, py = state[idx], state[idx+1]
             dx = zone_x - px
             dy = zone_y - py
@@ -179,16 +209,17 @@ class BasketballEnv:
                 dx /= norm
                 dy /= norm
                 # Alan merkezine doğru hareket (hız isteğe göre ayarlanabilir)
-                state[idx] += dx * 1.5
-                state[idx+1] += dy * 1.5
+                state[idx] += dx * np.random.uniform(0.5, 2.5)
+                state[idx+1] += dy * np.random.uniform(0.5, 2.5)
         return state
-    def set_home_zone_defense(self, state):
+    
+    def set_home_zone(self, state):
         zone_centers = [
-            (55, 45),  # Guard 1 (sol üst)
-            (85, 45),  # Guard 2 (sağ üst)
-            (55, 20),  # Forward 1 (sol alt)
-            (81, 20),  # Forward 2 (sağ alt)
-            (65, 10),  # Center (pota önü)
+            (60, 41),  # Guard 1 (sol üst)
+            (81, 41),  # Guard 2 (sağ üst)
+            (60, 10),  # Forward 1 (sol alt)
+            (81, 10),  # Forward 2 (sağ alt)
+            (70, 25),  # Center (pota önü)
         ]
          # Top sahibi oyuncunun indexini bul
         ball_x, ball_y = state[3], state[4]
@@ -201,7 +232,7 @@ class BasketballEnv:
                 min_dist = dist
                 owner_idx = i
         
-        for idx, (zone_x, zone_y) in zip(range(16, 26, 2), zone_centers):
+        for idx, (zone_x, zone_y) in zip(range(6, 16, 2), zone_centers):
             if i == owner_idx:
                 continue
             px, py = state[idx], state[idx+1]
@@ -212,8 +243,8 @@ class BasketballEnv:
                 dx /= norm
                 dy /= norm
                 # Alan merkezine doğru hareket (hız isteğe göre ayarlanabilir)
-                state[idx] += dx * 1.5
-                state[idx+1] += dy * 1.5
+                state[idx] += dx * np.random.uniform(0.5, 2.5)
+                state[idx+1] += dy * np.random.uniform(0.5, 2.5)
         return state
     
     def closest_defender_runs_to_ball(self, state):
@@ -247,8 +278,8 @@ class BasketballEnv:
             if norm != 0:
                 dx /= norm
                 dy /= norm
-                state[closest_defender_idx] += dx * 2  # hızını değiştirebilirsin
-                state[closest_defender_idx + 1] += dy * 2
+                state[closest_defender_idx] += dx * np.random.uniform(2.0, 3.0) # hızını değiştirebilirsin
+                state[closest_defender_idx + 1] += dy * np.random.uniform(2.0, 3.0)
 
         #Diğer savunmacılar kendilerine en yakın hücum oyuncusunu tutsun
         for i in range(defender_start, defender_end, 2):
@@ -272,8 +303,8 @@ class BasketballEnv:
                 if norm != 0:
                     dx /= norm
                     dy /= norm
-                    state[i] += dx * 1.5  # Markaj hızı
-                    state[i+1] += dy * 1.5
+                    state[i] += dx * np.random.uniform(1, 2.5)
+                    state[i+1] += dy * np.random.uniform(1, 2.5)
         return state
     
     def home_players_cut_to_open_space(self, state):
@@ -326,8 +357,8 @@ class BasketballEnv:
                 if norm != 0:
                     dx /= norm
                     dy /= norm
-                    state[i] += dx * np.random.uniform(1.0, 2.0)
-                    state[i+1] += dy * np.random.uniform(1.0, 2.0)
+                    state[i] += dx * np.random.uniform(0.5, 2.5)
+                    state[i+1] += dy * np.random.uniform(0.5, 2.5)
         return state
     
     def find_closest_defender_to_ball(self, state):
@@ -356,8 +387,11 @@ class BasketballEnv:
         # **Süre azalımı**
         new_state[1] -= 0.2  # Periyot süresi azalır
         new_state[2] -= 0.2  # Atak süresi azalır
-
-        reward = -0.0001  # Her adımda küçük bir ceza
+        if action != 4:
+            new_state = self.set_home_zone(new_state)
+            #new_state = self.closest_defender_runs_to_ball(new_state) 
+            new_state = self.set_away_zone_defense(new_state) 
+        
 
         ball_x = new_state[3]
         ball_y = new_state[4]
@@ -366,7 +400,7 @@ class BasketballEnv:
             self.last_touch = 1
         elif ball_owner == 2:
             self.last_touch = 2
-        
+           
         if new_state[2] <=0:
             new_owner_start = 16
             if ball_owner == 0:
@@ -405,8 +439,8 @@ class BasketballEnv:
             self.force_pass = True
             # Atak süresini sıfırla
             new_state[2] = 24.0
-            # Oyun devam ediyor, reward = 0
-            reward = -0.0001
+            reward = -1
+            #reward += -0.1  # Atak süresi dolduğunda ceza
             done = new_state[1] <= 0
             return new_state, reward, done
 
@@ -441,16 +475,26 @@ class BasketballEnv:
                 x_new = x
                 y_new = 49
 
+            new_state = self.set_home_zone(new_state)
+            #new_state = self.closest_defender_runs_to_ball(new_state)
+            new_state = self.set_away_zone_defense(new_state)
             new_state[3] = x_new
             new_state[4] = y_new
             new_state[5] = 5.0
             new_state[new_owner_start] = new_state[3]
             new_state[new_owner_start + 1] = new_state[4]
+            new_state[2] = 24.0
             self.force_pass = True
-            reward = -0.0001  # Saha dışına çıkma cezası
+            reward = -1
+            #reward += -0.1 
             done = new_state[1] <= 0 
             return new_state, reward, done
-       
+        
+        if self.ball_holder != self.last_touch:
+            new_state[2] = 24.0  # Atak süresi sıfırlanır
+            self.ball_holder = self.last_touch
+            reward = -1  # Top sahibi değiştiğinde ödül
+
         if self.pass_in_progress:
             # Topu hedefe doğru hareket ettir
             if self.pass_steps_remaining > 1:
@@ -465,7 +509,7 @@ class BasketballEnv:
                 self.home_pass = False
                 self.away_pass = False
                 self.pass_target = None
-                reward = 0.1
+                #reward += 0.1
             #new_state = self.home_players_cut_to_open_space(new_state)
             #new_state = self.closest_defender_runs_to_ball(new_state)
             done = new_state[1] <= 0
@@ -486,7 +530,7 @@ class BasketballEnv:
                         new_state[27] += self.shot_points  # Ev sahibi
                     elif self.away_shot:
                         new_state[28] += self.shot_points  # Deplasman
-                    reward += 1
+                    #reward += self.shot_points * 3
 
                     #new_state = self.home_players_cut_to_open_space(new_state)
                     #new_state = self.closest_defender_runs_to_ball(new_state)
@@ -496,15 +540,22 @@ class BasketballEnv:
                     new_state[4] = 26
                     new_state[5] = 5.0
                     new_state[2] = 24.0
+                    reward = 1
                     self.force_pass = True
                 else:
-                    #  Şut başarısız: top sekiyor (rastgele pozisyona düşüyor)
-                    new_state[3] = 88 + np.random.uniform(-5, 5)
-                    new_state[4] = 25 + np.random.uniform(-5, 5)
-                    new_state[5] = 5.0
+                    if self.shot_distance > 47:
+                        new_state[3] = 96 
+                        new_state[4] = 25 
+                        new_state[5] = 5.0
+                    else:
+                        #  Şut başarısız: top sekiyor (rastgele pozisyona düşüyor)
+                        sekme_çarpanı = min(self.shot_distance / 10, 1.5)
+                        new_state[3] = 88 + np.random.uniform(-5, 5) * sekme_çarpanı
+                        new_state[4] = 25 + np.random.uniform(-5, 5) * sekme_çarpanı
+                        new_state[5] = 5.0
                     #new_state = self.home_players_cut_to_open_space(new_state)
                     #new_state = self.closest_defender_runs_to_ball(new_state)
-                      # Başarısız şut için ceza
+                    #reward += -0.1  # Başarısız şut için ceza
                 self.shot_in_progress = False
                 self.away_shot = False
                 self.home_shot = False
@@ -512,15 +563,15 @@ class BasketballEnv:
             return new_state, reward, done
 
         if action == 0:  # PASS
-            pass_success = random.random() < 0.83
+            #pass_success = random.random() < 0.83
+            pass_success = True
             if pass_success:
                 target_index = self.select_pass_target(new_state, ball_x, ball_y)
-                reward += 0.1
             else:
                 target_index = self.find_closest_defender_to_ball(new_state)
-                reward += -0.2
+                
             
-            target_x = new_state[target_index]
+            target_x = new_state[target_index] 
             target_y = new_state[target_index + 1]
             self.pass_distance_x = (target_x - new_state[3]) * 0.33
             self.pass_distance_y = (target_y - new_state[4]) * 0.33
@@ -530,9 +581,9 @@ class BasketballEnv:
             new_state[3] += self.pass_distance_x
             new_state[4] += self.pass_distance_y
             #new_state = self.closest_defender_runs_to_ball(new_state)
-            new_state = self.set_away_zone_defense(new_state)
+            #new_state = self.set_away_zone_defense(new_state)
             #new_state = self.home_players_cut_to_open_space(new_state)
-            new_state = self.set_home_zone_defense(new_state)
+            #new_state = self.set_home_zone_defense(new_state)
             
         elif action == 1:  # SHOT
             hoop_x = 88
@@ -573,12 +624,13 @@ class BasketballEnv:
             self.shot_in_progress = True
             self.shot_steps_remaining = 2
             self.force_shot = True
+            self.shot_distance = distance
             new_state[3] += self.shot_distance_x
             new_state[4] += self.shot_distance_y
             #new_state = self.closest_defender_runs_to_ball(new_state)
-            new_state = self.set_away_zone_defense(new_state)
+            #new_state = self.set_away_zone_defense(new_state)
             #new_state = self.home_players_cut_to_open_space(new_state)
-            new_state = self.set_home_zone_defense(new_state)
+            #new_state = self.set_home_zone_defense(new_state)
 
         elif action == 3:  # dribble
             # Topun pozisyonu
@@ -608,26 +660,45 @@ class BasketballEnv:
                 direction_x /= norm
                 direction_y /= norm
 
-            move_x = direction_x * 2
-            move_y = direction_y * 2
+            move_x = direction_x * 3
+            move_y = direction_y * 3
             #new_state = self.closest_defender_runs_to_ball(new_state)
-            new_state = self.set_away_zone_defense(new_state)
+            #new_state = self.set_away_zone_defense(new_state)
             #new_state = self.home_players_cut_to_open_space(new_state)
-            new_state = self.set_home_zone_defense(new_state)
+            #new_state = self.set_home_zone_defense(new_state)
             # Top ve topu süren oyuncu birlikte hareket ediyor
             new_state[3] += move_x
             new_state[4] += move_y
             new_state[5] = 5.0  # top yerde
 
             if owner_idx is not None:
-                new_state[owner_idx] += move_x
-                new_state[owner_idx + 1] += move_y
+                new_state[owner_idx] = new_state[3] + 0.2
+                new_state[owner_idx + 1] = new_state[4] + 0.2
 
-            reward += 0.001
+            #reward += 0.01
 
         elif action == 4:
+            zone_centers_1 = [
+            (60, 41),  # Guard 1 (sol üst)
+            (81, 41),  # Guard 2 (sağ üst)
+            (60, 25),  # Forward 1 (sol alt)
+            (81, 25),  # Forward 2 (sağ alt)
+            (70, 10),  # Center (pota önü)
+            ]
+            zone_centers_2 = [
+            (34, 41),  # Guard 1 (sol üst)
+            (13, 41),  # Guard 2 (sağ üst)
+            (34, 25),  # Forward 1 (sol alt)
+            (13, 25),  # Forward 2 (sağ alt)
+            (24, 10),  # Center (pota önü)
+            ]
+            
             ball_x = new_state[3]
             ball_y = new_state[4]
+            if ball_x < 47:
+                target_points = zone_centers_2
+            else:
+                target_points = zone_centers_1
             # En yakın ev sahibi oyuncu
             min_dist_home = float('inf')
             closest_home = None
@@ -664,16 +735,15 @@ class BasketballEnv:
                 if i == closest_home or i == closest_away:
                     continue
                 # Sahada rastgele bir hedef belirle (örneğin sahanın ortası veya kenarları)
-                target_x = np.random.uniform(self.COURT_MIN_X + 5, self.COURT_MAX_X - 5)
-                target_y = np.random.uniform(self.COURT_MIN_Y + 5, self.COURT_MAX_Y - 5)
+                target_x, target_y = target_points[idx % len(target_points)]
                 dx = target_x - new_state[i]
                 dy = target_y - new_state[i+1]
                 norm = math.sqrt(dx**2 + dy**2)
                 if norm != 0:
                     dx /= norm
                     dy /= norm
-                    new_state[i] += dx * np.random.uniform(0.5, 1.0)
-                    new_state[i+1] += dy * np.random.uniform(0.5, 1.0)
+                    new_state[i] += dx * np.random.uniform(0.5, 2.5)
+                    new_state[i+1] += dy * np.random.uniform(0.5, 2.5)
 
             # Topun pozisyonu biraz rastgele değişsin (sekiyor gibi)
             new_state[3] += np.random.uniform(-0.5, 0.5)
@@ -742,8 +812,8 @@ loss_fn = nn.MSELoss()
 memory = deque(maxlen=10000)
 
 gamma = 0.95  
-epsilon_home = 0.05   # Ev sahibi için düşük
-epsilon_away = 0.25 
+epsilon_home = 0.15   # Ev sahibi için düşük
+epsilon_away = 0.35
 epsilon_min = 0.01 
 epsilon_decay = 0.995  
 batch_size = 32  
@@ -785,7 +855,7 @@ def split_by_period(data):
     if current:
         periods.append(current)
     return periods
-
+""""
 # ------------------ 5. Offline Pretraining ------------------ #
 offline_data_dir = "Last_result_data"
 offline_files = [f for f in os.listdir(offline_data_dir) if f.endswith(".json")]
@@ -813,7 +883,7 @@ for file in offline_files:
 print(f"Toplam {total_offline_samples} offline deney replay buffer'a eklendi.")
 
 # Offline pretraining için belirli adım sayısı (örneğin 1000 iterasyon)
-pretrain_steps = 50
+pretrain_steps = 1
 for step in range(pretrain_steps):
     if len(memory) < batch_size:
         break  # Yeterli veri yoksa pretrain yapılamaz
@@ -838,7 +908,7 @@ for step in range(pretrain_steps):
     if (step + 1) % 200 == 0:
         print(f"Offline pretraining step: {step + 1}/{pretrain_steps}")
 
-
+"""
 # ------------------ 6. Online Eğitim ------------------ #
 log_dir = "match_logs"
 os.makedirs(log_dir, exist_ok=True)
@@ -853,7 +923,7 @@ def find_action(action):
         4: ""
     }
     return action_map.get(action, "unknown")
-episodes = 10000  # Online eğitim için epizod sayısı
+episodes = 1000  # Online eğitim için epizod sayısı
 for episode in range(episodes):
     state = env.reset()
     env.state = torch.FloatTensor(state).to(device)  # state'i doğru cihaza taşı
@@ -864,10 +934,26 @@ for episode in range(episodes):
         valid_actions = env.get_valid_actions(is_home_team=True)
         ball_control = env.state[26]
         if env.away_shot or env.away_pass:
-            ball_control = 2
+            if ball_control == 1:
+                env.away_shot = False
+                env.away_pass = False
+                env.pass_in_progress = False
+                env.shot_in_progress = False
+                env.force_pass = False
+                env.force_shot = False
+            else:
+                ball_control = 2
             #print(ball_control)
         if env.home_shot or env.home_pass:
-            ball_control = 1
+            if ball_control == 2:
+                env.home_shot = False
+                env.home_pass = False
+                env.pass_in_progress = False
+                env.shot_in_progress = False
+                env.force_pass = False
+                env.force_shot = False
+            else:
+                ball_control = 1
             #print(ball_control)
 
         if ball_control == 1: 
@@ -965,7 +1051,7 @@ for episode in range(episodes):
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-    with open(os.path.join(log_dir, f"episode_{episode+1}.json"), "w") as f:json.dump(match_states, f)
+    
     
     # Skor bilgisini al (state'in son iki elemanı)
     score = env.state.cpu().numpy()[-2:]  # CPU'ya taşı ve numpy array'e çevir
@@ -974,8 +1060,13 @@ for episode in range(episodes):
     # Epsilon değerini azalt
     epsilon_home = max(epsilon_min, epsilon_home * epsilon_decay)
     epsilon_away = max(epsilon_min, epsilon_away * epsilon_decay)
-    if (episode + 1) % 100 == 0:
+    if (episode + 1) % 10 == 1:
         print(f"Episode {episode + 1}/{episodes}, Reward: {total_reward:.2f}, Epsilon Home: {epsilon_home:.4f},Epsilon Away: {epsilon_away:.4f}, Score: {home_score:.0f}-{away_score:.0f}")
+        with open(os.path.join(log_dir, f"dqn_1000_episode_{episode+1}.json"), "w") as f:json.dump(match_states, f)
+# Eğitim tamamlandıktan sonra modeli kaydet
+torch.save(dqn.state_dict(), "dqn_model_1000.pth")
+print("Model başarıyla kaydedildi: dqn_model_1000.pth")
+
 
 
 # ------------------ 7. Eğitim Sonrası Test ------------------ #
@@ -1010,6 +1101,6 @@ for sample in real_data:
         sample[1] = action_map.get(sample[1], 4)
 
 # Accuracy hesapla
-evaluate_action_accuracy(dqn, real_data, device)
+#evaluate_action_accuracy(dqn, real_data, device)
 
 

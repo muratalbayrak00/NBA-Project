@@ -18,7 +18,8 @@ class Constant:
     Y_MAX = 50
 
 # JSON verisini oku
-with open("../data_result/match_logs/episode_1.json", "r") as f:
+
+with open("../data_result/match_logs/episode_31.json", "r") as f:
     data = json.load(f)
 
 def get_coordinates(entry):
