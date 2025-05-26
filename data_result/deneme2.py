@@ -8,6 +8,15 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 from collections import deque
+import logging
+
+# Sadece bir kez ayarlaman yeterli
+logging.basicConfig(
+    filename="log.txt",
+    level=logging.INFO,
+    format="%(asctime)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+)
 
 # ------------------ 1. Basketbol Ortamı ------------------ #
 class BasketballEnv:
@@ -923,7 +932,7 @@ def find_action(action):
         4: ""
     }
     return action_map.get(action, "unknown")
-episodes = 10000  # Online eğitim için epizod sayısı
+episodes = 100000  # Online eğitim için epizod sayısı
 for episode in range(episodes):
     state = env.reset()
     env.state = torch.FloatTensor(state).to(device)  # state'i doğru cihaza taşı
@@ -1060,12 +1069,12 @@ for episode in range(episodes):
     # Epsilon değerini azalt
     epsilon_home = max(epsilon_min, epsilon_home * epsilon_decay)
     epsilon_away = max(epsilon_min, epsilon_away * epsilon_decay)
+    logging.info(f"Episode {episode + 1}/{episodes}, Reward: {total_reward:.2f}, Epsilon Home: {epsilon_home:.4f}, Epsilon Away: {epsilon_away:.4f}, Score: {home_score:.0f}-{away_score:.0f}")
     if (episode + 1) % 100 == 0:
-        print(f"Episode {episode + 1}/{episodes}, Reward: {total_reward:.2f}, Epsilon Home: {epsilon_home:.4f},Epsilon Away: {epsilon_away:.4f}, Score: {home_score:.0f}-{away_score:.0f}")
-        with open(os.path.join(log_dir, f"dqn_10000_episode_{episode+1}.json"), "w") as f:json.dump(match_states, f)
+        with open(os.path.join(log_dir, f"dqn_100000_episode_{episode+1}.json"), "w") as f:json.dump(match_states, f)
 # Eğitim tamamlandıktan sonra modeli kaydet
-torch.save(dqn.state_dict(), "dqn_model_10000.pth")
-print("Model başarıyla kaydedildi: dqn_model_10000.pth")
+torch.save(dqn.state_dict(), "dqn_100000_model.pth")
+print("Model başarıyla kaydedildi: dqn_100000_model.pth")
 
 
 
