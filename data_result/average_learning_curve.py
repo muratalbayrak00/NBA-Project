@@ -1,15 +1,14 @@
 import re
 import matplotlib.pyplot as plt
-import numpy as np
 
-log_path = "log.txt"  # Log dosyasının adı
+log_path = "log2.txt"  # Log dosyasının yolu
 
-# Episode ve Reward verilerini toplayalım
+# Episode ve Reward verilerini oku
 episodes = []
 rewards = []
 
-with open(log_path, 'r') as f:
-    for line in f:
+with open(log_path, 'r') as file:
+    for line in file:
         match = re.search(r"Episode (\d+)/\d+, Reward: ([\-\d.]+)", line)
         if match:
             ep = int(match.group(1))
@@ -17,23 +16,22 @@ with open(log_path, 'r') as f:
             episodes.append(ep)
             rewards.append(rw)
 
-# Ortalama rewardları hesapla (örnek: her 10 bölümde bir ortalama)
+# Kademeli + kayan ortalama hesapla (window size: 10)
 window_size = 30
-avg_episodes = []
 avg_rewards = []
 
-for i in range(0, len(rewards), window_size):
-    window = rewards[i:i+window_size]
-    if len(window) == window_size:
-        avg_episodes.append(episodes[i + window_size // 2])  # orta noktayı kullan
-        avg_rewards.append(np.mean(window))
+for i in range(len(rewards)):
+    start_idx = max(0, i - window_size + 1)
+    window = rewards[start_idx:i + 1]
+    avg_rewards.append(sum(window) / len(window))
 
-# Öğrenme eğrisini çiz
+# Grafiği çiz
 plt.figure(figsize=(10, 5))
-plt.plot(avg_episodes, avg_rewards, marker='o', linestyle='-', color='blue')
-plt.xlabel("Episode")
-plt.ylabel("Average Reward (per 10 episodes)")
-plt.title("Learning Curve from Log File")
+plt.plot(episodes, avg_rewards, color='darkorange', label='Moving average reward')
+plt.xlabel("Episode Number")
+plt.ylabel("Average Reward")
+plt.title(f"Learning curve with a sliding window of {window_size} episodes)")
 plt.grid(True)
+plt.legend()
 plt.tight_layout()
 plt.show()
