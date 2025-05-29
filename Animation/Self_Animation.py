@@ -19,7 +19,7 @@ class Constant:
 
 # JSON verisini oku
 
-with open("../data_result/match_logs/dqn_100_episode_50.json", "r") as f:
+with open("../data_result/match_logs/dqn_new_reward_episode_2500.json", "r") as f:
     data = json.load(f)
 
 def get_coordinates(entry):

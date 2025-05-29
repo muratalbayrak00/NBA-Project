@@ -10,9 +10,10 @@ import torch.nn.functional as F
 from collections import deque
 import logging
 
+
 # Sadece bir kez ayarlaman yeterli
 logging.basicConfig(
-    filename="log.txt",
+    filename="log4.txt",
     level=logging.INFO,
     format="%(asctime)s - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S"
@@ -502,7 +503,7 @@ class BasketballEnv:
         if self.ball_holder != self.last_touch:
             new_state[2] = 24.0  # Atak süresi sıfırlanır
             self.ball_holder = self.last_touch
-            reward = -1  # Top sahibi değiştiğinde ödül
+            reward = -1  # Top sahibi değiştiğinde ceza
 
         if self.pass_in_progress:
             # Topu hedefe doğru hareket ettir
@@ -549,7 +550,7 @@ class BasketballEnv:
                     new_state[4] = 26
                     new_state[5] = 5.0
                     new_state[2] = 24.0
-                    reward = 1
+                    reward = self.shot_points * 5  # Başarılı şut için ödül
                     self.force_pass = True
                 else:
                     if self.shot_distance > 47:
@@ -814,13 +815,14 @@ env = BasketballEnv()
 state_dim = env.state_dim
 action_dim = env.action_dim
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+#device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device("cpu")  # CPU kullanımı için
 dqn = DQN(state_dim, action_dim).to(device)
 optimizer = optim.Adam(dqn.parameters(), lr=0.001)
 loss_fn = nn.MSELoss()
 memory = deque(maxlen=10000)
 
-gamma = 0.95  
+gamma = 0.95 
 epsilon_home = 0.15   # Ev sahibi için düşük
 epsilon_away = 0.35
 epsilon_min = 0.01 
@@ -932,10 +934,14 @@ def find_action(action):
         4: ""
     }
     return action_map.get(action, "unknown")
-episodes = 100000  # Online eğitim için epizod sayısı
-for episode in range(episodes):
+
+recent_rewards = deque(maxlen=30)  # Son 30 episode için toplam ödül tutulacak
+variance_threshold = 10.0  # Yakınsama için varyans eşiği (gerekirse ayarlanabilir)
+episode = 0  # Online eğitim için epizod sayısı
+
+while True:
     state = env.reset()
-    env.state = torch.FloatTensor(state).to(device)  # state'i doğru cihaza taşı
+    env.state = torch.FloatTensor(state).to(device) 
     total_reward = 0
     done = False
     match_states = []
@@ -1046,10 +1052,10 @@ for episode in range(episodes):
             minibatch = random.sample(memory, batch_size)
             states, actions, rewards, next_states, dones = zip(*minibatch)
 
-            states = torch.stack(states).to(device)  # Cihaza taşımayı unutma
+            states = torch.stack(states).to(device) 
             actions = torch.LongTensor(actions).to(device)
             rewards = torch.FloatTensor(rewards).to(device)
-            next_states = torch.stack(next_states).to(device)  # Cihaza taşımayı unutma
+            next_states = torch.stack(next_states).to(device)  
             dones = torch.BoolTensor(dones).to(device)
 
             q_values = dqn(states).gather(1, actions.unsqueeze(1)).squeeze(1)
@@ -1065,16 +1071,32 @@ for episode in range(episodes):
     # Skor bilgisini al (state'in son iki elemanı)
     score = env.state.cpu().numpy()[-2:]  # CPU'ya taşı ve numpy array'e çevir
     home_score, away_score = score[0], score[1]
-
+    # Epizod sonunda:
+    recent_rewards.append(total_reward)
+    reward_variance = np.var(recent_rewards)
     # Epsilon değerini azalt
     epsilon_home = max(epsilon_min, epsilon_home * epsilon_decay)
     epsilon_away = max(epsilon_min, epsilon_away * epsilon_decay)
-    logging.info(f"Episode {episode + 1}/{episodes}, Reward: {total_reward:.2f}, Epsilon Home: {epsilon_home:.4f}, Epsilon Away: {epsilon_away:.4f}, Score: {home_score:.0f}-{away_score:.0f}")
-    if (episode + 1) % 1000 == 0:
-        with open(os.path.join(log_dir, f"dqn_100000_episode_{episode+1}.json"), "w") as f:json.dump(match_states, f)
+
+    logging.info(f"Episode {episode + 1}, Reward: {total_reward:.2f}, Variance: {reward_variance:.4f}, Epsilon Home: {epsilon_home:.4f}, Epsilon Away: {epsilon_away:.4f}, Score: {home_score:.0f}-{away_score:.0f}")
+
+
+    if (episode + 1) % 500 == 0:
+        with open(os.path.join(log_dir, f"dqn_new_reward_episode_{episode+1}.json"), "w") as f:json.dump(match_states, f)
+    if (episode + 1) % 5000 == 0:
+        torch.save(dqn.state_dict(), "dqn_new_5000_model.pth")
+        print("Model başarıyla kaydedildi: dqn_new_5000_model.pth")
+
+    # Yakınsama kontrolü
+    if len(recent_rewards) == recent_rewards.maxlen and reward_variance < variance_threshold:
+        print(f"Yakınsama sağlandı. Eğitim {episode + 1}. epizodda durduruluyor.")
+        break
+
+    episode += 1
+
 # Eğitim tamamlandıktan sonra modeli kaydet
-torch.save(dqn.state_dict(), "dqn_100000_model.pth")
-print("Model başarıyla kaydedildi: dqn_100000_model.pth")
+torch.save(dqn.state_dict(), "dqn_new_model.pth")
+print("Model başarıyla kaydedildi: dqn_new_model.pth")
 
 
 
