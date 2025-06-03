@@ -18,6 +18,7 @@ class Constant:
     Y_MAX = 50
 
 # JSON verisini oku
+#match_logs/dqn_new_reward_episode_2500
 
 with open("../data_result/match_logs/dqn_new_reward_episode_2500.json", "r") as f:
     data = json.load(f)
@@ -54,9 +55,9 @@ ax.set_aspect('equal')
 ax.axis('off')
 
 # Nesneler
-ball, = ax.plot([], [], 'ro', markersize=5, zorder=3)
-home_dots, = ax.plot([], [], 'bo', markersize=8, zorder=3)
-away_dots, = ax.plot([], [], 'go', markersize=8, zorder=3)
+ball, = ax.plot([], [], 'ro', markersize=9, zorder=3)
+home_dots, = ax.plot([], [], 'bo', markersize=11, zorder=3)
+away_dots, = ax.plot([], [], 'go', markersize=11, zorder=3)
 
 # Üst merkeze sabit yazılar
 period_text = ax.text((Constant.X_MIN + Constant.X_MAX) / 2, Constant.Y_MAX + 8,
@@ -89,5 +90,5 @@ def update(frame):
 
     return ball, home_dots, away_dots, period_text, score_text, gameclock_text, shotclock_text
 
-ani = animation.FuncAnimation(fig, update, frames=len(data), interval=100, blit=True)
+ani = animation.FuncAnimation(fig, update, frames=len(data), interval=300, blit=True)
 plt.show()
